@@ -120,6 +120,15 @@
               return {'type':'yt', 'vidId':vidId[1]}
             }
 
+            function videoLoader(videoId){
+              if(!embedApi){ //During the initial loading, build the player
+                onYouTubeIframeAPIReady(videoId);
+              }
+              else { //Subsequently, just get the video by id...
+                embedApi.loadVideoById({'videoId': videoId});
+              }
+            }
+
             // Code to load the IFrame player API code asynchronously
             var tag = document.createElement('script');
             //var startTime = 0;
@@ -129,8 +138,6 @@
 
             var firstScriptTag = document.getElementsByTagName('script')[0];
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-             // The following function creates an <iframe> and Panopto player
 
             var embedApi;
 
@@ -148,7 +155,6 @@
                      //$('#chat').scrollTop($('#chat')[0].scrollHeight);
                      $('#chat').append('<div id="new-block-2" class="chat-announce">'+data.msg+'</div><hr>')//.text($('#chat').text() +'\n' + '<' + data.msg + '>\n');
                      $('#chat').scrollTop($('#chat')[0].scrollHeight);
-
 
                      //something about loading videos:
                      if (embedApi) {
@@ -169,13 +175,13 @@
 
                      }
 
-                     else {
+                     /*else {
                        //alert("{{ session['room'] }}");
                        //var room = sockets.adapter.rooms['my_room'];
                        //room.length;
                        //var numClients = socket.rooms.get({{ session['room'] }}).size;
                        document.getElementById("vidAlert").innerHTML = 'Getting video syncing information from others';
-                     }
+                     }*/
 
                  });
                  socket.on('message', function(data) {
@@ -227,7 +233,7 @@
                     var timeEvent = new Date(1000*response.when).toLocaleTimeString();
                     if(response['type']=='ytid'){
                         document.getElementById("vidAlert").innerHTML = response.who+' selected a new video from Youtube at '+timeEvent;
-                        onYouTubeIframeAPIReady(response['key']);
+                        videoLoader(response['key']);
                     }
 
                   });
@@ -236,6 +242,7 @@
                     if(!embedApi){
                       document.getElementById("vidAlert").innerHTML = 'Loading video...';
                       onYouTubeIframeAPIReady(stateNow['vidURL'], startTime = stateNow['ptime']);
+                      //videoLoader(stateNow['vidURL']);
                       document.getElementById("vidAlert").innerHTML = 'Video ready to play.';
                     }
                   });
@@ -282,10 +289,6 @@
                                     'start': Math.floor(startTime)},
                       events: {
                         'onReady': onVideoReady,
-                        /*'onReady': function(e){
-                            // e.target = player
-                            e.target.setPlaybackRate(pspeed); // set to half speed
-                          },*/
                         'onStateChange': onStateUpdate,
                         'onPlaybackRateChange' : onPlaybackRateChange
                       }
@@ -306,8 +309,6 @@
             function onVideoReady()
             {
                 // The video has successfully been loaded by onPanoptoIframeReady
-                //embedApi.seekTo();
-                //embedApi.seekTo(sessionStorage.getItem('ptime'));
                 embedApi.pauseVideo();
 
             }
@@ -344,7 +345,6 @@
 
             //Function to load a new video:
             function loadNewVideo(){
-              //var videoURL = sanitizeText($('#videoURL').val());
               videoURL = $('#videoURL').val();
               console.log(videoURL);
               $.ajax({
@@ -354,10 +354,8 @@
                 contentType: "application/json",
                 dataType: 'json',
                 success: function(response){
-                  //console.log(response.length);
-                  //alert([response['type'], response['key']]);
                   if(response['type']=='ytid'){
-                      onYouTubeIframeAPIReady(response['key']);
+                    videoLoader(response['key']);
                   }
                   socket.emit('video update', response); //broadcast the new video to everyone
                 },

@@ -12,10 +12,10 @@ def joined(message):
     """Sent by clients when they enter a room.
     A status message is broadcast to all people in the room."""
     room = session.get('room')
-    time.sleep(0.5) #this ensures that the new client has time to render html
+    #time.sleep(0.5) #this ensures that the new client has time to render html
     join_room(room)
 
-    emit('status', {'msg': session.get('name') + ' joined the chat!'}, room=room)
+    emit('status', {'msg': session.get('name') + ' joined the chat!'}, room=room,  broadcast=True, include_self=False)
 
 
 @socketio.on('text', namespace='/chat')
@@ -86,7 +86,7 @@ def syncing_video(stateNow):
     ts = datetime.now(timezone.utc).timestamp()
     room = session.get('room')
     username = session.get('name')
-
+    time.sleep(0.5) #this ensures that the new client has time to render html
     print('stateNow',stateNow)
     emit('video synced', stateNow, room=room, broadcast=True, include_self=False)
 
