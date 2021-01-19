@@ -6,25 +6,107 @@
   {{ super() }}
 {% endblock %}
 {% block content %}
-<body>
   <div class="container">
-        <h1>Watch videos together</h1>
-        <form method="POST">
-            {{ form.hidden_tag() }}
-            {{ form.name.label }}: {{ form.name() }} {% for error in form.name.errors %}{{ error }}{% endfor %}<br>
-            {{ form.room.label }}: {{ form.room() }} {% for error in form.room.errors %}{{ error }}{% endfor %}<br>
-            {{ form.submit() }}
-        </form>
-  </div>
-  <div class="container">
-      <div class="row">
-      {% for ep in ret_list %}
-      <div class="col col-sm-6">
-        {{ep}}
-       </div>
-       {% endfor %}
- </div>
- </div>
+        <h3>Watch videos together</h3>
+        <div>
+          <hr>
+            <div>
+              <div class="alert alert-light"  role="alert" >
+                <span id="showName">
+                  {% if session['name'] %}
+                    Hello <strong>{{ session['name'] }}</strong>!
+                    {% endif %}
+                </span>
+                <span id="notif">
+                </span>
+              </div>
+            </div>
+              <div id="changeNameCollapse" class="card card-body">
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">Screen name: </span>
+                  </div>
+                  <input  class="form-control" id="username" value="{{ session['name'] }}"></input>
+                  <div  class="input-group-append">
+                      <button id="changeNameButton" onclick="changeUsername()"
+                      type="button" class="btn btn-info">Change Name</button>
+                  </div>
+                </div>
+                <small class="text-muted">Letters and numbers only, 6-20 characters (e.g., <em>hgttg42</em>)</small>
+              </div>
 
-</body>
+
+          </div>
+          <br>
+              <div id="changeRoomDiv" class="card card-body">
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon2">Room URL: </span>
+                  </div>
+                  <input  class="form-control" id="roomname" value="{{ session['room'] }}"></input>
+                  <div  class="input-group-append">
+                      <button id="changeRoomButton" onclick="changeRoomname()"
+                      type="button" class="btn btn-info">Go!</button>
+                  </div>
+                </div>
+                <small class="text-muted">Copy paste the room URL</small>
+              </div>
+
+              <div>-- OR --</div>
+              <button type="button" class="btn btn-light">Create a new room</button>
+
+        </div>
+
+</div>
+<script  type="text/javascript" charset="utf-8">
+  function showNameChangeForm(){
+    var x = document.getElementById("changeNameCollapse");
+    if (x.style.display === "none") {
+      x.style.display = "block";
+    } else {
+      x.style.display = "none";
+    }
+  }
+  //Function to change/choose a name:
+  function changeRoomname(){
+    roomname = $('#roomname').val();
+    $.ajax({
+      url: "{{ url_for('main.changeRoom') }}",
+      data: JSON.stringify({'room': roomname}),
+      type: 'POST',
+      contentType: "application/json",
+      dataType: 'json',
+      success: function(response){
+        //$("#showName").load(" #showName");
+        //document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
+        document.getElementById("notif").innerHTML = response['msg'];
+        window.location = response['url'];
+      },
+      error: function(error){
+          document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
+        }
+      });
+  }
+
+  //Function to change/choose a name:
+  function changeUsername(){
+    username = $('#username').val();
+    $.ajax({
+      url: "{{ url_for('main.changeName') }}",
+      data: JSON.stringify({'name': username}),
+      type: 'POST',
+      contentType: "application/json",
+      dataType: 'json',
+      success: function(response){
+        //$("#showName").load(" #showName");
+        document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
+        document.getElementById("notif").innerHTML = response['msg'];
+      },
+      error: function(error){
+          document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
+        }
+      });
+  }
+
+</script>
 {% endblock %}

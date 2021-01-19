@@ -86,7 +86,7 @@ def syncing_video(stateNow):
     ts = datetime.now(timezone.utc).timestamp()
     room = session.get('room')
     username = session.get('name')
-    time.sleep(0.5) #this ensures that the new client has time to render html
+    #time.sleep(0.1) #this ensures that the new client has time to render html
     print('stateNow',stateNow)
     emit('video synced', stateNow, room=room, broadcast=True, include_self=False)
 

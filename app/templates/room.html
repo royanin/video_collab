@@ -6,370 +6,8 @@
   {{ super() }}
 {% endblock %}
 {% block content %}
-	 <script type="text/javascript" charset="utf-8">
-
-            //create clientId
-             function getRandomInt() {
-               return Math.floor((Math.random() * 100000) + 1);
-             }
-             var clientId = getRandomInt();
-
-             //Purify user input to remove markups/sql injection
-             var sanitizeText = function (str) {
-              	return str.replace(/[^\w. ]/gi, function (c) {
-              		return '&#' + c.charCodeAt(0) + ';';
-              	});
-              };
-
-
-              //Function to load chat and format it based on the clientname:
-              function loadChat(data, add_pos){
-                  //data is a single message in the json format containing who, when and msg as keys
-                  //add_pos could be "append" or "prepend"
-                  var options = { month: 'short', day: 'numeric' };
-                  var dateGiven = new Date(1000*data.when).toLocaleDateString(options);
-                  var dateNow = new Date().toLocaleDateString(options);
-                  var timeNow = new Date(1000*data.when).toLocaleTimeString();
-                  if (dateGiven!==dateNow){
-                      timeNow = dateGiven+', '+timeNow;
-                  }
-
-                  var user = {{ session.name|tojson }};
-
-                  if (data.who==user){
-                    //$('#chat').append(posting_format)
-                    var who = "";
-                    var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
-                    <div class="container"><div class="row">\
-                      <div class="col-11"><div class="msgOut">'+data.msg+'</div>\
-                      <div class="msgOut whoTimeOut">'+who+timeNow+'</div>\
-                      <div class="col-1"></div></div></div></div>';
-
-                  }
-                  else {
-                    var who=data.who+'  |  ';
-                    var userNn = who.substring(0, 2);
-                    //$('#chat').append(posting_format)
-                    var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
-                    <div class="container"><div class="row no-gutters">\
-                      <div class="col-2 text-right"><span class="iconIn">'+userNn+'</span></div>\
-                      <div class="col-10"><div class="msgIn">'+data.msg+'</div>\
-                      <div class="msgIn whoTimeOut">'+who+timeNow+'</div></div></div></div>';
-                  }
-
-                  if (add_pos==="append"){
-                    $('#chat').append(posting_format);
-                  }
-                  else {
-                    $('#chat').prepend(posting_format);
-                  }
-                  /* Decide whether to append or prepend */
-
-              }
-
-              function getMoreChat(){
-                  var tstamp = $('.tstamp').eq(0).html();
-                  //alert(tstamp);
-                  //data = {'tstamp': tstamp}
-                  if (!tstamp){
-                    data = JSON.stringify({'tstamp': new Date().getTime()/1000.0});
-                  }
-                  else{
-                    data = JSON.stringify({'tstamp': tstamp});
-                  }
-
-              		$.ajax({
-              			url: "{{ url_for('main.getchat') }}",
-              			data: data,
-              			type: 'POST',
-                    contentType: "application/json",
-                    dataType: 'json',
-              			success: function(response){
-              				//console.log(response.length);
-                      //destroy button
-                      var loadChatButtonId =  "loadchatButton";
-                      var buttonLoadChat = document.getElementById(loadChatButtonId);
-                      //var buttonLoadChatClass = ('#loadchatButton').attr('class');
-                      var buttonLoadChatText = buttonLoadChat.innerHTML;
-                      //alert(buttonLoadChatClass);
-                      buttonLoadChat.remove();
-
-                      //Prepend returned chat messages
-                      for (var i = 0; i < response.length; i++){
-                         //console.log(response[i])
-                         loadChat(response[i], "prepend")
-                      }
-
-                      //prepend a new loadchatButton:
-                      const newLoadChat = document.createElement("button");
-                      newLoadChat.setAttribute("id", loadChatButtonId);
-                      newLoadChat.onclick = getMoreChat; //setting it as getMoreChat() calls the function with infinite loop...
-                      //newLoadChat.ClassName = buttonLoadChatClass;
-                      newLoadChat.textContent = buttonLoadChatText;
-                      $('#chat').prepend(newLoadChat);
-              			},
-              			error: function(error){
-              				console.log(error);
-              			}
-              		});
-                }
-
-            function parseUrl(url){
-              //just youtube for now...
-              var vidId = url.match(/[?&]v=([^&]+)/);
-              return {'type':'yt', 'vidId':vidId[1]}
-            }
-
-            function videoLoader(videoId){
-              if(!embedApi){ //During the initial loading, build the player
-                onYouTubeIframeAPIReady(videoId);
-              }
-              else { //Subsequently, just get the video by id...
-                embedApi.loadVideoById({'videoId': videoId});
-              }
-            }
-
-            // Code to load the IFrame player API code asynchronously
-            var tag = document.createElement('script');
-            //var startTime = 0;
-
-            //tag.src = "https://developers.panopto.com/scripts/embedapi.min.js"; //for panopto
-            tag.src = "https://www.youtube.com/iframe_api";  //for youtube
-
-            var firstScriptTag = document.getElementsByTagName('script')[0];
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-            var embedApi;
-
-
-
-             //SocketIO segment
-             var socket;
-             $(document).ready(function(){
-                 socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
-                 socket.on('connect', function() {
-                     socket.emit('joined', {});
-                 });
-                 socket.on('status', function(data) {
-                     //$('#chat').text($('#chat').text() +'\n' + '<' + data.msg + '>\n');
-                     //$('#chat').scrollTop($('#chat')[0].scrollHeight);
-                     $('#chat').append('<div id="new-block-2" class="chat-announce">'+data.msg+'</div><hr>')//.text($('#chat').text() +'\n' + '<' + data.msg + '>\n');
-                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
-
-                     //something about loading videos:
-                     if (embedApi) {
-                       var vidURL = embedApi.getVideoUrl();
-
-                       //get the video type (Youtube, Vimeo, Panopto etc.) and the link
-                       var videoTypeLink = parseUrl(vidURL);
-                       console.log(videoTypeLink);
-                       embedApi.setPlaybackRate(1.0);
-                       stateNow = getCompleteState();
-                       embedApi.pauseVideo(); //Better to stop video and wait to synch
-                       stateNow['vidtype'] = videoTypeLink['type'];
-                       stateNow['vidURL'] = videoTypeLink['vidId'];
-                       //alert([stateNow['vidtype'], stateNow['vidURL']]);
-                       document.getElementById("vidAlert").innerHTML = 'Syncing video for the newcomer';
-                       socket.emit('video sync', stateNow);
-                       //setTimeout(function(){ socket.emit('video sync', stateNow); }, 500);
-
-                     }
-
-                     /*else {
-                       //alert("{{ session['room'] }}");
-                       //var room = sockets.adapter.rooms['my_room'];
-                       //room.length;
-                       //var numClients = socket.rooms.get({{ session['room'] }}).size;
-                       document.getElementById("vidAlert").innerHTML = 'Getting video syncing information from others';
-                     }*/
-
-                 });
-                 socket.on('message', function(data) {
-
-                   loadChat(data, "append");
-
-                 });
-                 $('#text').keypress(function(e) {
-                     var code = e.keyCode || e.which;
-                     if (code == 13) {
-                         text = $('#text').val()+ '\n';
-                         if (text!='\n'){
-                           text = sanitizeText(text);
-                           $('#text').val('');
-                           socket.emit('text', {msg: text});
-                       }
-                     }
-                 });
-
-                 socket.on('update state', function(msg) {
-
-                   var timeEvent = new Date(1000*msg.when).toLocaleTimeString();
-                  //player state: this is working on broadcast -- the signal sender should not receive this
-                    if(embedApi){
-                      if (msg['pstate']!== embedApi.getPlayerState()){
-                          if (msg['pstate']===2){
-                              document.getElementById("vidAlert").innerHTML = msg.who+' paused the video at '+timeEvent;
-                              embedApi.seekTo(msg['ptime']);
-                              embedApi.pauseVideo();
-
-                          }
-                          else if (msg['pstate']===1){
-                              document.getElementById("vidAlert").innerHTML = msg.who+' started playing the video at '+timeEvent;
-                              embedApi.seekTo(msg['ptime']);
-                              embedApi.playVideo();
-                          }
-                        }
-                      //if (msg['pspeed']!== embedApi.getPlaybackRate()){
-                      if (msg['what']=== "speed"){
-                              document.getElementById("vidAlert").innerHTML = msg.who+' changed the playback speed to '+msg.pspeed+'x at '+timeEvent;
-                              embedApi.seekTo(msg['ptime']);
-                              embedApi.setPlaybackRate(msg['pspeed']);
-
-                        }
-                      }
-                  });
-
-                  socket.on('video updated', function(response){
-                    var timeEvent = new Date(1000*response.when).toLocaleTimeString();
-                    if(response['type']=='ytid'){
-                        document.getElementById("vidAlert").innerHTML = response.who+' selected a new video from Youtube at '+timeEvent;
-                        videoLoader(response['key']);
-                    }
-
-                  });
-
-                  socket.on('video synced', function(stateNow){
-                    if(!embedApi){
-                      document.getElementById("vidAlert").innerHTML = 'Loading video...';
-                      onYouTubeIframeAPIReady(stateNow['vidURL'], startTime = stateNow['ptime']);
-                      //videoLoader(stateNow['vidURL']);
-                      document.getElementById("vidAlert").innerHTML = 'Video ready to play.';
-                    }
-                  });
-
-             }); //closing socket function
-
-             //submit a post request on an action:
-             //console.log($('#chat').scrollTop($('#chat')[0].scrollHeight));
-
-            /*
-            function onPanoptoIframeReady()
-            {
-                embedApi = new EmbedApi("player", {
-                    width: "750",
-                    height: "422",
-                    //This is the URL of your Panopto site
-                    serverName: "mit.hosted.panopto.com",
-                    //sessionId: "d95ddfd0-9218-48ca-93fe-ac830148c168",
-                    sessionId:"b987cb43-22f6-43ed-91f6-ac770149bc6e",
-                    videoParams: { // Optional parameters
-                    //interactivity parameter controls if the user sees table of contents, discussions, notes, & in-video search
-                        "interactivity": "search",
-                        "showtitle": "false",
-                        "hideoverlay":"false"
-                    },
-                    events: {
-                        "onIframeReady": onIframeReady,
-                        "onReady": onVideoReady,
-                        "onStateChange": onStateUpdate,
-                        "onPlaybackRateChange": onPlaybackRateChange
-                    }
-                });
-            } */
-
-            //function onYouTubeIframeAPIReady(vkey, startTime=0, pspeed=1.0) {
-            function onYouTubeIframeAPIReady(vkey, startTime=0) {
-              if(vkey){
-                  //alert(vkey);
-                  embedApi   = new YT.Player('player', {
-                      //width: '750',
-                      //height: '422',
-                      videoId: vkey,
-                      playerVars: { 'autoplay': 0,
-                                    'start': Math.floor(startTime)},
-                      events: {
-                        'onReady': onVideoReady,
-                        'onStateChange': onStateUpdate,
-                        'onPlaybackRateChange' : onPlaybackRateChange
-                      }
-                    });
-                  }
-                }
-
-              //The API will call this function when the iframe is ready
-            function onIframeReady()
-            {
-                // The iframe is ready and the video is not yet loaded (on the splash screen)
-                // Load video will begin playback
-                embedApi.loadVideo();
-
-            }
-
-              //The API will call this function when the video player is ready
-            function onVideoReady()
-            {
-                // The video has successfully been loaded by onPanoptoIframeReady
-                embedApi.pauseVideo();
-
-            }
-
-            //The API calls this function when a player state change happens
-             function onStateUpdate(state)
-            {
-                var currentState = getCompleteState();
-                socket.emit('state update', currentState);
-            }
-            function onPlaybackRateChange()
-            {
-                var currentState = getCompleteState();
-                socket.emit('state update speed', currentState);
-            }
-
-
-            function getCompleteState(){
-              return {
-              'clientId': clientId,
-              'pstate': embedApi.getPlayerState(),
-              'pspeed': embedApi.getPlaybackRate(),
-              'ptime': embedApi.getCurrentTime()};
-            }
-
-            function leave_room() {
-                socket.emit('left', {}, function() {
-                    socket.disconnect();
-
-                    // go back to the login page
-                    window.location.href = "{{ url_for('main.index') }}";
-                });
-            }
-
-            //Function to load a new video:
-            function loadNewVideo(){
-              videoURL = $('#videoURL').val();
-              console.log(videoURL);
-              $.ajax({
-                url: "{{ url_for('main.getURL') }}",
-                data: JSON.stringify({'url': videoURL}),
-                type: 'POST',
-                contentType: "application/json",
-                dataType: 'json',
-                success: function(response){
-                  if(response['type']=='ytid'){
-                    videoLoader(response['key']);
-                  }
-                  socket.emit('video update', response); //broadcast the new video to everyone
-                },
-                error: function(error){
-                    alert("Sorry, we could not parse the link you provided...");
-                  }
-                });
-            }
-
-
-
-        </script>
         <div class="container">
-          <h3>Welcome to room: {{ room }}</h3>
+          <h4>Hi {{ name }}! Welcome to room: {{ room }}</h4>
         </div>
       <div class="container">
         <div class="row">
@@ -405,8 +43,370 @@
         </div>
         </div>
       </div>
+      <script type="text/javascript" charset="utf-8">
+
+               //create clientId
+                function getRandomInt() {
+                  return Math.floor((Math.random() * 100000) + 1);
+                }
+                var clientId = getRandomInt();
+
+                //Purify user input to remove markups/sql injection
+                var sanitizeText = function (str) {
+                 	return str.replace(/[^\w. ]/gi, function (c) {
+                 		return '&#' + c.charCodeAt(0) + ';';
+                 	});
+                 };
+
+
+                 //Function to load chat and format it based on the clientname:
+                 function loadChat(data, add_pos){
+                     //data is a single message in the json format containing who, when and msg as keys
+                     //add_pos could be "append" or "prepend"
+                     var options = { month: 'short', day: 'numeric' };
+                     var dateGiven = new Date(1000*data.when).toLocaleDateString(options);
+                     var dateNow = new Date().toLocaleDateString(options);
+                     var timeNow = new Date(1000*data.when).toLocaleTimeString();
+                     if (dateGiven!==dateNow){
+                         timeNow = dateGiven+', '+timeNow;
+                     }
+
+                     var user = {{ session.name|tojson }};
+
+                     if (data.who==user){
+                       //$('#chat').append(posting_format)
+                       var who = "";
+                       var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
+                       <div class="container"><div class="row">\
+                         <div class="col-11"><div class="msgOut">'+data.msg+'</div>\
+                         <div class="msgOut whoTimeOut">'+who+timeNow+'</div>\
+                         <div class="col-1"></div></div></div></div>';
+
+                     }
+                     else {
+                       var who=data.who+'  |  ';
+                       var userNn = who.substring(0, 2);
+                       //$('#chat').append(posting_format)
+                       var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
+                       <div class="container"><div class="row no-gutters">\
+                         <div class="col-2 text-right"><span class="iconIn">'+userNn+'</span></div>\
+                         <div class="col-10"><div class="msgIn">'+data.msg+'</div>\
+                         <div class="msgIn whoTimeOut">'+who+timeNow+'</div></div></div></div>';
+                     }
+
+                     if (add_pos==="append"){
+                       $('#chat').append(posting_format);
+                     }
+                     else {
+                       $('#chat').prepend(posting_format);
+                     }
+                     /* Decide whether to append or prepend */
+
+                 }
+
+                 function getMoreChat(){
+                     var tstamp = $('.tstamp').eq(0).html();
+                     //alert(tstamp);
+                     //data = {'tstamp': tstamp}
+                     if (!tstamp){
+                       data = JSON.stringify({'tstamp': new Date().getTime()/1000.0});
+                     }
+                     else{
+                       data = JSON.stringify({'tstamp': tstamp});
+                     }
+
+                 		$.ajax({
+                 			url: "{{ url_for('main.getchat') }}",
+                 			data: data,
+                 			type: 'POST',
+                       contentType: "application/json",
+                       dataType: 'json',
+                 			success: function(response){
+                 				//console.log(response.length);
+                         //destroy button
+                         var loadChatButtonId =  "loadchatButton";
+                         var buttonLoadChat = document.getElementById(loadChatButtonId);
+                         //var buttonLoadChatClass = ('#loadchatButton').attr('class');
+                         var buttonLoadChatText = buttonLoadChat.innerHTML;
+                         //alert(buttonLoadChatClass);
+                         buttonLoadChat.remove();
+
+                         //Prepend returned chat messages
+                         for (var i = 0; i < response.length; i++){
+                            //console.log(response[i])
+                            loadChat(response[i], "prepend")
+                         }
+
+                         //prepend a new loadchatButton:
+                         const newLoadChat = document.createElement("button");
+                         newLoadChat.setAttribute("id", loadChatButtonId);
+                         newLoadChat.onclick = getMoreChat; //setting it as getMoreChat() calls the function with infinite loop...
+                         //newLoadChat.ClassName = buttonLoadChatClass;
+                         newLoadChat.textContent = buttonLoadChatText;
+                         $('#chat').prepend(newLoadChat);
+                 			},
+                 			error: function(error){
+                 				console.log(error);
+                 			}
+                 		});
+                   }
+
+               function parseUrl(url){
+                 //just youtube for now...
+                 var vidId = url.match(/[?&]v=([^&]+)/);
+                 return {'type':'yt', 'vidId':vidId[1]}
+               }
+
+               function videoLoader(videoId){
+                 if(!embedApi){ //During the initial loading, build the player
+                   onYouTubeIframeAPIReady(videoId);
+                 }
+                 else { //Subsequently, just get the video by id...
+                   embedApi.loadVideoById({'videoId': videoId});
+                 }
+               }
+
+               // Code to load the IFrame player API code asynchronously
+               var tag = document.createElement('script');
+               //var startTime = 0;
+
+               //tag.src = "https://developers.panopto.com/scripts/embedapi.min.js"; //for panopto
+               tag.src = "https://www.youtube.com/iframe_api";  //for youtube
+
+               var firstScriptTag = document.getElementsByTagName('script')[0];
+               firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+               var embedApi;
+
+               /*
+               function onPanoptoIframeReady()
+               {
+                   embedApi = new EmbedApi("player", {
+                       width: "750",
+                       height: "422",
+                       //This is the URL of your Panopto site
+                       serverName: "mit.hosted.panopto.com",
+                       //sessionId: "d95ddfd0-9218-48ca-93fe-ac830148c168",
+                       sessionId:"b987cb43-22f6-43ed-91f6-ac770149bc6e",
+                       videoParams: { // Optional parameters
+                       //interactivity parameter controls if the user sees table of contents, discussions, notes, & in-video search
+                           "interactivity": "search",
+                           "showtitle": "false",
+                           "hideoverlay":"false"
+                       },
+                       events: {
+                           "onIframeReady": onIframeReady,
+                           "onReady": onVideoReady,
+                           "onStateChange": onStateUpdate,
+                           "onPlaybackRateChange": onPlaybackRateChange
+                       }
+                   });
+               } */
+
+               //function onYouTubeIframeAPIReady(vkey, startTime=0, pspeed=1.0) {
+               function onYouTubeIframeAPIReady(vkey='', startTime=0) {
+                 if(vkey){
+                     //alert(vkey);
+                     embedApi   = new YT.Player('player', {
+                         //width: '750',
+                         //height: '422',
+                         videoId: vkey,
+                         playerVars: { 'autoplay': 0,
+                                       'start': Math.floor(startTime)},
+                         events: {
+                           'onReady': onVideoReady,
+                           'onStateChange': onStateUpdate,
+                           'onPlaybackRateChange' : onPlaybackRateChange
+                         }
+                       });
+                     }
+                   }
+                //SocketIO segment
+                var socket;
+                $(document).ready(function(){
+                    socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+                    socket.on('connect', function() {
+                        socket.emit('joined', {});
+                    });
+                    socket.on('status', function(data) {
+                        //$('#chat').text($('#chat').text() +'\n' + '<' + data.msg + '>\n');
+                        //$('#chat').scrollTop($('#chat')[0].scrollHeight);
+                        $('#chat').append('<div id="new-block-2" class="chat-announce">'+data.msg+'</div><hr>')//.text($('#chat').text() +'\n' + '<' + data.msg + '>\n');
+                        $('#chat').scrollTop($('#chat')[0].scrollHeight);
+
+                        //something about loading videos:
+                        if (embedApi) {
+                          var vidURL = embedApi.getVideoUrl();
+
+                          //get the video type (Youtube, Vimeo, Panopto etc.) and the link
+                          var videoTypeLink = parseUrl(vidURL);
+                          console.log(videoTypeLink);
+                          embedApi.setPlaybackRate(1.0);
+                          stateNow = getCompleteState();
+                          embedApi.pauseVideo(); //Better to stop video and wait to synch
+                          stateNow['vidtype'] = videoTypeLink['type'];
+                          stateNow['vidURL'] = videoTypeLink['vidId'];
+                          //alert([stateNow['vidtype'], stateNow['vidURL']]);
+                          document.getElementById("vidAlert").innerHTML = 'Syncing video for the newcomer';
+                          socket.emit('video sync', stateNow);
+                          //setTimeout(function(){ socket.emit('video sync', stateNow); }, 500);
+
+                        }
+
+                        /*else {
+                          //alert("{{ session['room'] }}");
+                          //var room = sockets.adapter.rooms['my_room'];
+                          //room.length;
+                          //var numClients = socket.rooms.get({{ session['room'] }}).size;
+                          document.getElementById("vidAlert").innerHTML = 'Getting video syncing information from others';
+                        }*/
+
+                    });
+                    socket.on('message', function(data) {
+
+                      loadChat(data, "append");
+
+                    });
+                    $('#text').keypress(function(e) {
+                        var code = e.keyCode || e.which;
+                        if (code == 13) {
+                            text = $('#text').val()+ '\n';
+                            if (text!='\n'){
+                              text = sanitizeText(text);
+                              $('#text').val('');
+                              socket.emit('text', {msg: text});
+                          }
+                        }
+                    });
+
+                    socket.on('update state', function(msg) {
+
+                      var timeEvent = new Date(1000*msg.when).toLocaleTimeString();
+                     //player state: this is working on broadcast -- the signal sender should not receive this
+                       if(embedApi){
+                         if (msg['pstate']!== embedApi.getPlayerState()){
+                             if (msg['pstate']===2){
+                                 document.getElementById("vidAlert").innerHTML = msg.who+' paused the video at '+timeEvent;
+                                 embedApi.seekTo(msg['ptime']);
+                                 embedApi.pauseVideo();
+
+                             }
+                             else if (msg['pstate']===1){
+                                 document.getElementById("vidAlert").innerHTML = msg.who+' started playing the video at '+timeEvent;
+                                 embedApi.seekTo(msg['ptime']);
+                                 embedApi.playVideo();
+                             }
+                           }
+                         //if (msg['pspeed']!== embedApi.getPlaybackRate()){
+                         if (msg['what']=== "speed"){
+                                 document.getElementById("vidAlert").innerHTML = msg.who+' changed the playback speed to '+msg.pspeed+'x at '+timeEvent;
+                                 embedApi.seekTo(msg['ptime']);
+                                 embedApi.setPlaybackRate(msg['pspeed']);
+
+                           }
+                         }
+                     });
+
+                     socket.on('video updated', function(response){
+                       var timeEvent = new Date(1000*response.when).toLocaleTimeString();
+                       if(response['type']=='ytid'){
+                           document.getElementById("vidAlert").innerHTML = response.who+' selected a new video from Youtube at '+timeEvent;
+                           videoLoader(response['key']);
+                       }
+
+                     });
+
+                     socket.on('video synced', function(stateNow){
+                       if(!embedApi){
+                         document.getElementById("vidAlert").innerHTML = 'Loading video...';
+                         //onYouTubeIframeAPIReady(stateNow['vidURL'], startTime = stateNow['ptime']);
+                         setTimeout(function(){
+                           onYouTubeIframeAPIReady(stateNow['vidURL'], startTime = stateNow['ptime']);
+                         }, 200);
+                         document.getElementById("vidAlert").innerHTML = 'Video ready to play.';
+                       }
+                     });
+
+                }); //closing socket function
+
+                //submit a post request on an action:
+                //console.log($('#chat').scrollTop($('#chat')[0].scrollHeight));
 
 
 
-    </body>
+                 //The API will call this function when the iframe is ready
+               function onIframeReady()
+               {
+                   // The iframe is ready and the video is not yet loaded (on the splash screen)
+                   // Load video will begin playback
+                   embedApi.loadVideo();
+
+               }
+
+                 //The API will call this function when the video player is ready
+               function onVideoReady()
+               {
+                   // The video has successfully been loaded by onPanoptoIframeReady
+                   embedApi.pauseVideo();
+
+               }
+
+               //The API calls this function when a player state change happens
+                function onStateUpdate(state)
+               {
+                   var currentState = getCompleteState();
+                   socket.emit('state update', currentState);
+               }
+               function onPlaybackRateChange()
+               {
+                   var currentState = getCompleteState();
+                   socket.emit('state update speed', currentState);
+               }
+
+
+               function getCompleteState(){
+                 return {
+                 'clientId': clientId,
+                 'pstate': embedApi.getPlayerState(),
+                 'pspeed': embedApi.getPlaybackRate(),
+                 'ptime': embedApi.getCurrentTime()};
+               }
+
+               function leave_room() {
+                   socket.emit('left', {}, function() {
+                       socket.disconnect();
+
+                       // go back to the login page
+                       window.location.href = "{{ url_for('main.index') }}";
+                   });
+               }
+
+               //Function to load a new video:
+               function loadNewVideo(){
+                 videoURL = $('#videoURL').val();
+                 console.log(videoURL);
+                 $.ajax({
+                   url: "{{ url_for('main.getURL') }}",
+                   data: JSON.stringify({'url': videoURL}),
+                   type: 'POST',
+                   contentType: "application/json",
+                   dataType: 'json',
+                   success: function(response){
+                     if(response['type']=='ytid'){
+                       videoLoader(response['key']);
+                     }
+                     socket.emit('video update', response); //broadcast the new video to everyone
+                   },
+                   error: function(error){
+                       alert("Sorry, we could not parse the link you provided...");
+                     }
+                   });
+               }
+
+
+
+           </script>
+
+
+
 {% endblock %}

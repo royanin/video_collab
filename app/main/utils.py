@@ -1,5 +1,6 @@
 import sqlite3, json
 from datetime import datetime,timezone
+import random, string
 from urllib.parse import urlparse, parse_qs
 
 def write_chat(conn, ts, room_id, username, text):
@@ -69,3 +70,23 @@ def parse_url(url):
         return ("ytid", query.path[1:])
     else:
         raise ValueError
+
+
+def validate_newname(name):
+    if len(name)>=6 and len(name)<=20 and name.isalnum():
+        msg_ = "Name change successful."
+
+    else:
+        msg_ = "We chose a random name for you; acceptable names are 6-20 characters long, and contain letters and numbers only."
+        name = ''.join(random.choices(string.ascii_lowercase, k=8))
+
+    return name, msg_
+
+def validate_newroom(room):
+    return True
+    '''
+    if len(room)==32:
+        return True
+    else:
+        return False
+    '''

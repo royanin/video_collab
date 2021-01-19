@@ -3,41 +3,101 @@ from . import main
 from .forms import LoginForm
 #from .utils import read_chat, write_chat
 import sqlite3, json
-from .utils import write_chat, read_chat, parse_url
+from .utils import write_chat, read_chat, parse_url, validate_newname, validate_newroom
+import uuid
 
 
-
+'''
 @main.route('/', methods=['GET', 'POST'])
 def index():
-    """Login form to enter a room."""
+
+    #Login form to enter a room.
     form = LoginForm()
     #db_file = current_app.config['db_file']
 
     if form.validate_on_submit():
         session['name'] = form.name.data
-        session['room'] = form.room.data
-        return redirect(url_for('.chat'))
+        #session['room'] = form.room.data
+
+        #assign room here:
+        room = session.get('room', '')
+        if room == '':
+            u = uuid.uuid4()
+            room = u.hex
+            session['room'] = room
+        session['joint'] = "{}.{}".format(room, session['name'])
+        print('Hello {}, your room is {}'.format(session['name'], room))
+        return redirect(url_for('.chat', room=room))
+
     elif request.method == 'GET':
         form.name.data = session.get('name', '')
-        form.room.data = session.get('room', '')
+        #room = session.get('room', '')
+        #form.room.data = session.get('room', '')
+
     return render_template('index.html', form=form, ret_list=[])
+    '''
+@main.route('/', methods=['GET'])
+def index():
+
+    return render_template('index.html')
+
+@main.route('/changename', methods=['POST'])
+def changeName():
+    data = request.get_json()
+    newName = data['name']
+    newName, msg_ = validate_newname(newName)
+    session['name'] = newName
+    room = session.get('room', '')
+    if room != '':
+        session['joint'] = "{}.{}".format(room, session['name'])
+
+    return json.dumps({'name':newName, 'msg':msg_})
 
 
-@main.route('/chat')
-def chat():
+
+@main.route('/changeroom', methods=['POST'])
+def changeRoom():
+    data = request.get_json()
+    newRoom = data['room']
+    if validate_newroom(newRoom):
+        session['room'] = newRoom
+        name = session.get('name', '')
+        if name != '':
+            session['joint'] = "{}.{}".format(newRoom, name)
+            print(session)
+            url = (url_for('.chat', room=newRoom))
+            #return redirect(url_for('.chat', room=newRoom))
+            return json.dumps({'url':url,
+            'msg':'Going to the room...'})
+
+        else:
+
+            return json.dumps({'msg':'You need a valid screen name to proceed'})
+
+    else:
+        return json.dumps({'msg':'Cannot go into this room. Either create a new one, or provide a valid room link.'})
+
+@main.route('/chat/<room>',  methods=['GET'])
+def chat(room):
+
     """Chat room. The user's name and room must be stored in
     the session."""
     print(session)
 
-    #sid = socketio.eio.sid
-    #print('socket id: {}'.format(sid))
-
     name = session.get('name', '')
-    room = session.get('room', '')
-    if name == '' or room == '':
+    joint = session.get('joint', '')
+    #Check if this roomId exists and if it's active
+    #To be implemented. For now assume it's OK:
+    session['room'] = room
+
+    if name == '':
         return redirect(url_for('.index'))
 
-    return render_template('room.html', name=name, room=room)
+    elif joint != "{}.{}".format(room, name):
+        return redirect(url_for('.index'))
+
+    else:
+        return render_template('room.html', name=name, room=room)
 
 @main.route('/morechat', methods=['POST'])
 def getchat():
@@ -70,6 +130,7 @@ def getchat():
 
     else:
         return(msg)
+
 
 
 @main.route('/newvideourl', methods=['POST'])
