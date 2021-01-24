@@ -9,69 +9,63 @@
   <div class="container">
         <h3>Watch videos together</h3>
         <div>
-          <hr>
-            <div>
-              <div class="alert alert-light"  role="alert" >
-                <span id="showName">
-                  {% if session['name'] %}
-                    Hello <strong>{{ session['name'] }}</strong>!
-                    {% endif %}
-                </span>
-                <span id="notif">
-                </span>
-              </div>
-            </div>
-              <div id="changeNameCollapse" class="card card-body">
-                <div class="input-group mb-3">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text" id="basic-addon1">Screen name: </span>
-                  </div>
-                  <input  class="form-control" id="username" value="{{ session['name'] }}"></input>
-                  <div  class="input-group-append">
-                      <button id="changeNameButton" onclick="changeUsername()"
-                      type="button" class="btn btn-info">Change Name</button>
-                  </div>
-                </div>
+
+            <div class="col-md-6 offset-md-3">
+            <form>
+              <div class="form-group">
+                <input type="text" class="form-control" id="username" aria-describedby="emailHelp"
+                placeholder="Enter screen name" value="{{ session['name'] }}">
                 <small class="text-muted">Letters and numbers only, 6-20 characters (e.g., <em>hgttg42</em>)</small>
               </div>
-
-
-          </div>
-          <br>
-              <div id="changeRoomDiv" class="card card-body">
-                <div class="input-group mb-3">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text" id="basic-addon2">Room URL: </span>
-                  </div>
-                  <input  class="form-control" id="roomname" value="{{ session['room'] }}"></input>
-                  <div  class="input-group-append">
-                      <button id="changeRoomButton" onclick="changeRoomname()"
-                      type="button" class="btn btn-info">Go!</button>
-                  </div>
-                </div>
-                <small class="text-muted">Copy paste the room URL</small>
+              <div class="form-group">
+                <input type="text" class="form-control" id="roomname" placeholder="Room name"
+                value="{{ session['room'] }}">
               </div>
+              <div class="text-center">
+              <button type="submit"  onclick="joinRoom()" class="btn btn-primary">Join room by URL</button>
+              <p><br> <em>OR</em> </p>
+              <button type="submit"  onclick="createRoom()" class="btn btn-dark">Create a new room</button>
+              </div>
+            </form>
+            </div>
+            <div id="notif">
+            </div>
+          </div>
+  </div>
 
-              <div>-- OR --</div>
-              <button type="button" class="btn btn-light">Create a new room</button>
 
-        </div>
-
-</div>
 <script  type="text/javascript" charset="utf-8">
-  function showNameChangeForm(){
-    var x = document.getElementById("changeNameCollapse");
-    if (x.style.display === "none") {
-      x.style.display = "block";
-    } else {
-      x.style.display = "none";
+  //Function to join a room:
+  function joinRoom(){
+    roomname = $('#roomname').val();
+    username = $('#username').val();
+    if (username !== ''){
+      $.ajax({
+        url: "{{ url_for('main.joinRoom') }}",
+        data: JSON.stringify({'room': roomname, 'name': username}),
+        type: 'POST',
+        contentType: "application/json",
+        dataType: 'json',
+        success: function(response){
+          //$("#showName").load(" #showName");
+          //document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
+          document.getElementById("notif").innerHTML = response['msg'];
+          window.location = response['url'];
+        },
+        error: function(error){
+            document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
+          }
+        });
     }
+
   }
+
+
   //Function to change/choose a name:
   function changeRoomname(){
     roomname = $('#roomname').val();
     $.ajax({
-      url: "{{ url_for('main.changeRoom') }}",
+      url: "{{ url_for('main.changeName') }}",
       data: JSON.stringify({'room': roomname}),
       type: 'POST',
       contentType: "application/json",

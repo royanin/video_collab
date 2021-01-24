@@ -6,12 +6,62 @@
   {{ super() }}
 {% endblock %}
 {% block content %}
+<div class="container-fluid">
+    <h5>Hi {{ session.name }}! Welcome to room: {{ session.room }}</h5>
+</div>
+<div class="container-fluid">
+<div class="flex">
+  <div id="a"  class="split split-horizontal">
+      <div id="c" class="split content">
         <div class="container">
-          <h4>Hi {{ name }}! Welcome to room: {{ room }}</h4>
+          <!--<div class="embed-responsive embed-responsive-4by3">-->
+          <div id="player" class="player">
+            <!-- <div class="player" id="player"></div>-->
         </div>
+        <!--</div>-->
+        <br>
+        <div>
+          <div id="loadNewVideoButton" class="input-group mb-3">
+            <input type="text" id="videoURL" class="form-control" placeholder='e.g., https://www.youtube.com/watch?v=-Qr8QrMG3CQ'
+            aria-label="New video URL" aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <button class="btn btn-sm btn-outline-secondary" onclick="loadNewVideo()" type="button">Load</button>
+            </div>
+          </div>
+          <span><small>Load a video by URL. <em>Others will see it after you hit "Load"</em></small></span>
+          </div>
+          </div>
+      </div>
+      <div id="d" class="split content">
+        <div class="container">
+        <button class="btn btn-sm btn-primary" id="jitsiStart" type="button">Start Video/Audio chat</button>
+        <div class="meet2" id="meet"></div>
+        </div>
+      </div>
+
+  </div>
+  <div id="b"  class="split content split-horizontal">
+    <div>
       <div class="container">
+        <div id='vidAlertBox' class="alert alert-light" role="alert">
+          <em><span id='vidAlert'></span></em>
+        </div>
+
+        <div id ="notepad2" class="notepad">
+          <div class="notepadHead"></div>
+          <iframe name="embed_readwrite"
+          src="http://localhost:9001/p/kjanvkajnvakjnvakjnv?userName={{ session.name }}&showControls=true&showChat=false&showLineNumbers=true&useMonospaceFont=false" width="100%" height="800" frameborder="10"></iframe>
+        </div>
+        </div>
+    </div>
+  </div>
+</div>
+</div>
+
+    {#  <div class="container-fluid">
+        <h4>Hi {{ name }}! Welcome to room: {{ room }}</h4>
         <div class="row">
-          <div class="col-md-8 text-center">
+          <div class="col-md-12 text-center">
             <div id='vidAlertBox' class="alert alert-light" role="alert">
               <em><span id='vidAlert'></span></em>
             </div>
@@ -26,24 +76,99 @@
                   <button class="btn btn-sm btn-outline-secondary" onclick="loadNewVideo()" type="button">Load</button>
                 </div>
               </div>
+            <div class="container">
+              <button class="btn btn-sm btn-primary" id="jitsiStart" type="button">Start Video/Audio chat</button>
+              <div class="meet2" id="meet">
+
+            </div>
             </div>
 
         </div>
-        <div class="col-md-4 text-left">
-          <!--<textarea id="chat" cols="50" rows="20"></textarea>-->
-          <div  id="chat" style="background-color:#e6e6e6;height:500px;overflow:auto" >
-            <!--<button id="loadchat" onclick="getChat()" class="btn btn-outline-Dark">Load previous messages</button>-->
-          <button id="loadchatButton" onclick="getMoreChat()">Load previous messages</button>
-          </div><br><br>
-          <div class="form-group w-100">
-            <input id="text" class="form-control" placeholder="Enter your message here">
-          </div><br>
+        </div>
+        </div>
+        <div class="row">
+        <div class="col-md-12 text-left">
 
           <a href="#" onclick="leave_room();">Leave this room</a>
+
+          <div id ="notepad2" class="notepad">
+            <div class="notepadHead"></div>
+            <iframe name="embed_readwrite"
+            src="http://localhost:9001/p/kjanvkajnvakjnvakjnv?userName={{ session.name }}&showControls=true&showChat=false&showLineNumbers=true&useMonospaceFont=false" width="100%" height="800" frameborder="0"></iframe>
+
+          </div>
+          <hr>
+          <div>
+            <p>More about this tool.</p>
+          </div>
         </div>
         </div>
-      </div>
+      </div> #}
+
       <script type="text/javascript" charset="utf-8">
+
+        //const heightOutput = document.getElementById("#a").clientWidth;
+        //const widthOutput = document.querySelector('#widthNum');
+
+        /*function resize() {
+          heightOutput.textContent = window.innerHeight;
+          widthOutput.textContent = window.innerWidth;
+        }*/
+
+        //window.onresize = resize;
+
+
+        Split(['#a', '#b'], {
+          direction: 'horizontal',
+          sizes: [60, 40],
+        gutterSize: 8,
+        cursor: 'col-resize',
+        /*onDragEnd:  function() {
+          //localStorage.setItem('split-sizes', JSON.stringify(sizes
+          getSize();
+          //alert('hahaha ab');
+        },*/
+      }
+        )
+
+        Split(['#c', '#d'], {
+            direction: 'vertical',
+            sizes: [50, 50],
+            min: 200,
+            gutterSize: 20,
+            cursor: 'row-resize',
+            onDragEnd:  function() {
+                  //alert('hahaha cd');
+                  getSize();
+                  //localStorage.setItem('split-sizes', JSON.stringify(sizes))
+              },
+            }
+        )
+
+        function getSize(){
+          var elem = document.getElementById("d");
+          if(elem) {
+             var rect = elem.getBoundingClientRect();
+             //document.querySelector('#widthNum').textContent = rect.width;
+             //document.querySelector('#heightNum').textContent = rect.height;
+             var wframe = rect.width;
+             var hframe = rect.height - 100;
+
+             //document.querySelector('#widthNum').textContent = wVideo;
+             //document.querySelector('#heightNum').textContent = hVideo;
+             console.log({wframe,hframe});
+
+             if(api){
+              //alert('here!');
+              const iframe2 = api.getIFrame();
+              //iframe2.setAttribute('height', hframe);
+              //iframe2.style.height = "'"+hframe+"px'"
+              alert(iframe2.style.height);
+            }
+
+          }
+        }
+
 
                //create clientId
                 function getRandomInt() {
@@ -59,97 +184,6 @@
                  };
 
 
-                 //Function to load chat and format it based on the clientname:
-                 function loadChat(data, add_pos){
-                     //data is a single message in the json format containing who, when and msg as keys
-                     //add_pos could be "append" or "prepend"
-                     var options = { month: 'short', day: 'numeric' };
-                     var dateGiven = new Date(1000*data.when).toLocaleDateString(options);
-                     var dateNow = new Date().toLocaleDateString(options);
-                     var timeNow = new Date(1000*data.when).toLocaleTimeString();
-                     if (dateGiven!==dateNow){
-                         timeNow = dateGiven+', '+timeNow;
-                     }
-
-                     var user = {{ session.name|tojson }};
-
-                     if (data.who==user){
-                       //$('#chat').append(posting_format)
-                       var who = "";
-                       var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
-                       <div class="container"><div class="row">\
-                         <div class="col-11"><div class="msgOut">'+data.msg+'</div>\
-                         <div class="msgOut whoTimeOut">'+who+timeNow+'</div>\
-                         <div class="col-1"></div></div></div></div>';
-
-                     }
-                     else {
-                       var who=data.who+'  |  ';
-                       var userNn = who.substring(0, 2);
-                       //$('#chat').append(posting_format)
-                       var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
-                       <div class="container"><div class="row no-gutters">\
-                         <div class="col-2 text-right"><span class="iconIn">'+userNn+'</span></div>\
-                         <div class="col-10"><div class="msgIn">'+data.msg+'</div>\
-                         <div class="msgIn whoTimeOut">'+who+timeNow+'</div></div></div></div>';
-                     }
-
-                     if (add_pos==="append"){
-                       $('#chat').append(posting_format);
-                     }
-                     else {
-                       $('#chat').prepend(posting_format);
-                     }
-                     /* Decide whether to append or prepend */
-
-                 }
-
-                 function getMoreChat(){
-                     var tstamp = $('.tstamp').eq(0).html();
-                     //alert(tstamp);
-                     //data = {'tstamp': tstamp}
-                     if (!tstamp){
-                       data = JSON.stringify({'tstamp': new Date().getTime()/1000.0});
-                     }
-                     else{
-                       data = JSON.stringify({'tstamp': tstamp});
-                     }
-
-                 		$.ajax({
-                 			url: "{{ url_for('main.getchat') }}",
-                 			data: data,
-                 			type: 'POST',
-                       contentType: "application/json",
-                       dataType: 'json',
-                 			success: function(response){
-                 				//console.log(response.length);
-                         //destroy button
-                         var loadChatButtonId =  "loadchatButton";
-                         var buttonLoadChat = document.getElementById(loadChatButtonId);
-                         //var buttonLoadChatClass = ('#loadchatButton').attr('class');
-                         var buttonLoadChatText = buttonLoadChat.innerHTML;
-                         //alert(buttonLoadChatClass);
-                         buttonLoadChat.remove();
-
-                         //Prepend returned chat messages
-                         for (var i = 0; i < response.length; i++){
-                            //console.log(response[i])
-                            loadChat(response[i], "prepend")
-                         }
-
-                         //prepend a new loadchatButton:
-                         const newLoadChat = document.createElement("button");
-                         newLoadChat.setAttribute("id", loadChatButtonId);
-                         newLoadChat.onclick = getMoreChat; //setting it as getMoreChat() calls the function with infinite loop...
-                         //newLoadChat.ClassName = buttonLoadChatClass;
-                         newLoadChat.textContent = buttonLoadChatText;
-                         $('#chat').prepend(newLoadChat);
-                 			},
-                 			error: function(error){
-                 				console.log(error);
-                 			}
-                 		});
-                   }
 
                function parseUrl(url){
                  //just youtube for now...
@@ -165,6 +199,27 @@
                    embedApi.loadVideoById({'videoId': videoId});
                  }
                }
+
+               //Jitsi
+
+               var button = document.querySelector('#jitsiStart');
+               var container = document.querySelector('#meet');
+               var api = null;
+
+               button.addEventListener('click', () => {
+                   var domain = "meet.jit.si";
+                   var options = {
+                       "roomName": "foo-bar-c8cfdb0d-135a-4462-a05b-36575c3ef591",
+                       "userInfo": {
+                         "displayName": "{{ session.name }}",
+                       },
+                       "parentNode": container,
+                       "width": "100%",
+                       //"height": "100%",
+                   };
+                   api = new JitsiMeetExternalAPI(domain, options);
+               });
+
 
                // Code to load the IFrame player API code asynchronously
                var tag = document.createElement('script');
@@ -208,8 +263,8 @@
                  if(vkey){
                      //alert(vkey);
                      embedApi   = new YT.Player('player', {
-                         //width: '750',
-                         //height: '422',
+                         width: '100%',
+                         //height: '100%',
                          videoId: vkey,
                          playerVars: { 'autoplay': 0,
                                        'start': Math.floor(startTime)},
@@ -224,16 +279,14 @@
                 //SocketIO segment
                 var socket;
                 $(document).ready(function(){
-                    socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+                    socket = io.connect('http://' + document.domain + ':' + location.port + '/chat', {
+                      'sync disconnect on unload': true }
+                    );
                     socket.on('connect', function() {
                         socket.emit('joined', {});
                     });
-                    socket.on('status', function(data) {
-                        //$('#chat').text($('#chat').text() +'\n' + '<' + data.msg + '>\n');
-                        //$('#chat').scrollTop($('#chat')[0].scrollHeight);
-                        $('#chat').append('<div id="new-block-2" class="chat-announce">'+data.msg+'</div><hr>')//.text($('#chat').text() +'\n' + '<' + data.msg + '>\n');
-                        $('#chat').scrollTop($('#chat')[0].scrollHeight);
 
+                    socket.on('status', function(data) {
                         //something about loading videos:
                         if (embedApi) {
                           var vidURL = embedApi.getVideoUrl();
@@ -262,22 +315,7 @@
                         }*/
 
                     });
-                    socket.on('message', function(data) {
 
-                      loadChat(data, "append");
-
-                    });
-                    $('#text').keypress(function(e) {
-                        var code = e.keyCode || e.which;
-                        if (code == 13) {
-                            text = $('#text').val()+ '\n';
-                            if (text!='\n'){
-                              text = sanitizeText(text);
-                              $('#text').val('');
-                              socket.emit('text', {msg: text});
-                          }
-                        }
-                    });
 
                     socket.on('update state', function(msg) {
 
@@ -307,6 +345,10 @@
                          }
                      });
 
+                     socket.on('disconnect', function() {
+                         leave_room();
+                     });
+
                      socket.on('video updated', function(response){
                        var timeEvent = new Date(1000*response.when).toLocaleTimeString();
                        if(response['type']=='ytid'){
@@ -322,7 +364,7 @@
                          //onYouTubeIframeAPIReady(stateNow['vidURL'], startTime = stateNow['ptime']);
                          setTimeout(function(){
                            onYouTubeIframeAPIReady(stateNow['vidURL'], startTime = stateNow['ptime']);
-                         }, 200);
+                         }, 300);
                          document.getElementById("vidAlert").innerHTML = 'Video ready to play.';
                        }
                      });
@@ -403,6 +445,50 @@
                    });
                }
 
+               // Make the DIV element draggable:
+          /*
+          dragElement(document.getElementById("notepad2"));
+
+          function dragElement(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (document.getElementById(elmnt.id + "header")) {
+              // if present, the header is where you move the DIV from:
+              document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+            } else {
+              // otherwise, move the DIV from anywhere inside the DIV:
+              elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+              e = e || window.event;
+              e.preventDefault();
+              // get the mouse cursor position at startup:
+              pos3 = e.clientX;
+              pos4 = e.clientY;
+              document.onmouseup = closeDragElement;
+              // call a function whenever the cursor moves:
+              document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+              e = e || window.event;
+              e.preventDefault();
+              // calculate the new cursor position:
+              pos1 = pos3 - e.clientX;
+              pos2 = pos4 - e.clientY;
+              pos3 = e.clientX;
+              pos4 = e.clientY;
+              // set the element's new position:
+              elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+              elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+              // stop moving when mouse button is released:
+              document.onmouseup = null;
+              document.onmousemove = null;
+            }
+          } */
 
 
            </script>

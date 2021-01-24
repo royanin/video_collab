@@ -1,295 +1,130 @@
 <script type="text/javascript" charset="utf-8">
-         // Code to load the IFrame player API code asynchronously
-         var tag = document.createElement('script');
-         var startTime = 100;
+  //Function to load chat and format it based on the clientname:
+  function loadChat(data, add_pos){
+      //data is a single message in the json format containing who, when and msg as keys
+      //add_pos could be "append" or "prepend"
+      var options = { month: 'short', day: 'numeric' };
+      var dateGiven = new Date(1000*data.when).toLocaleDateString(options);
+      var dateNow = new Date().toLocaleDateString(options);
+      var timeNow = new Date(1000*data.when).toLocaleTimeString();
+      if (dateGiven!==dateNow){
+          timeNow = dateGiven+', '+timeNow;
+      }
 
-         tag.src = "https://developers.panopto.com/scripts/embedapi.min.js"
-         var firstScriptTag = document.getElementsByTagName('script')[0];
-         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      var user = {{ session.name|tojson }};
 
-          // The following function creates an <iframe> and Panopto player
+      if (data.who==user){
+        //$('#chat').append(posting_format)
+        var who = "";
+        var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
+        <div class="container"><div class="row">\
+          <div class="col-11"><div class="msgOut">'+data.msg+'</div>\
+          <div class="msgOut whoTimeOut">'+who+timeNow+'</div>\
+          <div class="col-1"></div></div></div></div>';
 
-         var embedApi;
-         function onPanoptoEmbedApiReady()
-         {
-             embedApi = new EmbedApi("player", {
-                 width: "750",
-                 height: "422",
-                 //This is the URL of your Panopto site
-                 serverName: "mit.hosted.panopto.com",
-                 //sessionId: "d95ddfd0-9218-48ca-93fe-ac830148c168",
-                 sessionId:"b987cb43-22f6-43ed-91f6-ac770149bc6e",
-                 videoParams: { // Optional parameters
-                 //interactivity parameter controls if the user sees table of contents, discussions, notes, & in-video search
-                     "interactivity": "search",
-                     "showtitle": "false",
-                     "hideoverlay":"false"
-                 },
-                 events: {
-                     "onIframeReady": onPanoptoIframeReady,
-                     "onReady": onPanoptoVideoReady,
-                     "onStateChange": onPanoptoStateUpdate
-                 }
-             });
-         }
+      }
+      else {
+        var who=data.who+'  |  ';
+        var userNn = who.substring(0, 2);
+        //$('#chat').append(posting_format)
+        var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
+        <div class="container"><div class="row no-gutters">\
+          <div class="col-2 text-right"><span class="iconIn">'+userNn+'</span></div>\
+          <div class="col-10"><div class="msgIn">'+data.msg+'</div>\
+          <div class="msgIn whoTimeOut">'+who+timeNow+'</div></div></div></div>';
+      }
 
-           //The API will call this function when the iframe is ready
-         function onPanoptoIframeReady()
-         {
-             // The iframe is ready and the video is not yet loaded (on the splash screen)
-             // Load video will begin playback
-             embedApi.loadVideo();
+      if (add_pos==="append"){
+        $('#chat').append(posting_format);
+      }
+      else {
+        $('#chat').prepend(posting_format);
+      }
+      /* Decide whether to append or prepend */
 
-             //consol.log(vidDur);
-             $('#totaltime').val(vidDur);
-             //document.getElementById("#totaltime").innerHTML=vidDur;
+  }
 
-         }
+  function getMoreChat(){
+      var tstamp = $('.tstamp').eq(0).html();
+      //alert(tstamp);
+      //data = {'tstamp': tstamp}
+      if (!tstamp){
+        data = JSON.stringify({'tstamp': new Date().getTime()/1000.0});
+      }
+      else{
+        data = JSON.stringify({'tstamp': tstamp});
+      }
 
-           //The API will call this function when the video player is ready
-         function onPanoptoVideoReady()
-         {
-             // The video has successfully been loaded by onPanoptoIframeReady
+     $.ajax({
+       url: "{{ url_for('main.getchat') }}",
+       data: data,
+       type: 'POST',
+        contentType: "application/json",
+        dataType: 'json',
+       success: function(response){
+         //console.log(response.length);
+          //destroy button
+          var loadChatButtonId =  "loadchatButton";
+          var buttonLoadChat = document.getElementById(loadChatButtonId);
+          //var buttonLoadChatClass = ('#loadchatButton').attr('class');
+          var buttonLoadChatText = buttonLoadChat.innerHTML;
+          //alert(buttonLoadChatClass);
+          buttonLoadChat.remove();
 
-             // Seek to 100s
-             embedApi.seekTo(startTime);
-             //loopFunc();
-         }
+          //Prepend returned chat messages
+          for (var i = 0; i < response.length; i++){
+             //console.log(response[i])
+             loadChat(response[i], "prepend")
+          }
 
-         //The API calls this function when a player state change happens
-          function onPanoptoStateUpdate(state)
-         {
-             if (state === PlayerState.Playing)
-             {
-                 embedApi.setVolume(0.3);
-                 //embedApi.setPlaybackRate(2);
-                 document.getElementById("tmon").innerHTML = embedApi.getCurrentTime()
-             }
-             document.getElementById("myText").innerHTML = embedApi.getState();
-         }
-         function onPlaybackRateChange()
-         {
-            document.getElementById("myTextr").innerHTML = embedApi.getPlaybackRate();
-         }
-         //console.log('before');
-         function myFunction() {
-           //document.getElementById("myText").innerHTML = embedApi;
-           document.getElementById("myText3").innerHTML = embedApi.getCurrentTime();
-           document.getElementById("myText4").innerHTML = embedApi.getPlaybackRate();
+          //prepend a new loadchatButton:
+          const newLoadChat = document.createElement("button");
+          newLoadChat.setAttribute("id", loadChatButtonId);
+          newLoadChat.onclick = getMoreChat; //setting it as getMoreChat() calls the function with infinite loop...
+          //newLoadChat.ClassName = buttonLoadChatClass;
+          newLoadChat.textContent = buttonLoadChatText;
+          $('#chat').prepend(newLoadChat);
+       },
+       error: function(error){
+         console.log(error);
+       }
+     });
+    }
+    socket.on('message', function(data) {
 
-           //document.getElementById("myText").innerHTML = onStateChange();
-         }
+      loadChat(data, "append");
 
-         function playPause(){
+    });
+    $('#text').keypress(function(e) {
+        var code = e.keyCode || e.which;
+        if (code == 13) {
+            text = $('#text').val()+ '\n';
+            if (text!='\n'){
+              text = sanitizeText(text);
+              $('#text').val('');
+              socket.emit('text', {msg: text});
+          }
+        }
+    });
 
-           var plst = embedApi.getState();
-           if (plst==1)
-            embedApi.pauseVideo();
-            //var pause_button = document.getElementById("myText").innerHTML
-          else
-            embedApi.playVideo();
+    function getSize(){
+      var elem = document.getElementById("c");
+      if(elem) {
+         var rect = elem.getBoundingClientRect();
+         //document.querySelector('#widthNum').textContent = rect.width;
+         //document.querySelector('#heightNum').textContent = rect.height;
+         var wVideo = rect.width;
+         var hVideo = rect.height - 100;
 
-            {var x = document.getElementById("play");
-            var y = document.getElementById("pause");
+         document.querySelector('#widthNum').textContent = wVideo;
+         document.querySelector('#heightNum').textContent = hVideo;
+         /*
+         if(embedApi){
+          embedApi.setSize(width=wVideo, height=hVideo);
+        }*/
 
-            if (x.style.display === "none") {
-                   x.style.display = "block";
-                 } else {
-                   x.style.display = "none";
-                 };
-           if (y.style.display === "none") {
-                  y.style.display = "block";
-                } else {
-                  y.style.display = "none";
-                };
-
-           };
-         }
-         //SocketIO segment
-         var socket;
-         $(document).ready(function(){
-             socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
-             socket.on('connect', function() {
-                 socket.emit('joined', {});
-             });
-             socket.on('status', function(data) {
-                 $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
-                 $('#chat').scrollTop($('#chat')[0].scrollHeight);
-             });
-             socket.on('message', function(data) {
-                 $('#chat').val($('#chat').val() + data.msg + '\n');
-                 $('#chat').scrollTop($('#chat')[0].scrollHeight);
-             });
-             $('#text').keypress(function(e) {
-                 var code = e.keyCode || e.which;
-                 if (code == 13) {
-                     text = $('#text').val();
-                     $('#text').val('');
-                     socket.emit('text', {msg: text});
-                 }
-             });
-
-             $("#slider1").on("input", function() {
-                 //$("#input_B").val(this.value);
-                 socket.emit('value changed', {who: $(this).attr('id'), data: $(this).val()});
-
-             });
-             socket.on('update value', function(msg) {
-                 $('input#'+msg.who).val(msg.data)
-             });
-
-             //Play pause events
-             $("#pp1").on("click", function() {
-                 //$("#input_B").val(this.value);
-                 //var ps = embedApi.getState();
-                 socket.emit('plps', {who: $(this).attr('id')});
-
-             });
-
-             socket.on('update plps', function(msg) {
-                 //$('#pp1'+msg.who).val(msg.data)
-                 //msg.data;
-                 playPause();
-
-             });
-
-         });
-
-         function emitSpeedChange(){
-           var x = $('#pbspeed').val();
-           socket.emit('pbspeed', {who: 'pbspeed', data: x});
-         }
-
-         function leave_room() {
-             socket.emit('left', {}, function() {
-                 socket.disconnect();
-
-                 // go back to the login page
-                 window.location.href = "{{ url_for('main.index') }}";
-             });
-         }
+      }
+    }
 
 
-
-                              /*if(msg['clientId']!==clientId){
-                                   console.log(msg, msg['clientId'], clientId);
-                                   //Sync player state
-                                   if (msg['pstate']!== embedApi.getPlayerState()){
-                                        embedApi.seekTo(msg['ptime']);
-                                        //embedApi.setPlaybackRate(msg['pspeed']);
-                                        if (msg['pstate']===2){
-                                            embedApi.pauseVideo();
-                                            document.getElementById("vid-alert").innerHTML = userNn+' paused the video.';
-                                        }
-                                        else if (msg['pstate']===1){
-                                            embedApi.playVideo();
-                                            document.getElementById("vid-alert").innerHTML = userNn+' started playing the video.';
-                                        }
-
-                                      }
-
-                                   if (msg['pspeed']!== embedApi.getPlaybackRate()){
-                                           embedApi.seekTo(msg['ptime']);
-                                           embedApi.setPlaybackRate(msg['pspeed']);
-                                           document.getElementById("vid-alert").innerHTML = userNn+' changed the video speed to '+msg.pspeed+'x';
-                                     }
-                                 }*/         
-
-     </script>
-      <div id="vidcontrols">
-
-        <div class="row">
-          <div class="col-md-2 text-center">
-            <div class="row">
-              <button type="button" id="vol1" class="btn btn-sm btn-light">-10s</button>
-              <button type="button" id="vol1" class="btn btn-sm btn-light">+10s</button>
-            </div>
-            </div>
-          <div class="col-md-7 text-center">
-            <input id="slider2" type="range" min="0" max="100" value="{{slider2}}" />
-          </div>
-          <div class="col-md-3 text-center">
-              <span id="elapsedtime">00:00</span>/<span id="totaltime">00:00</span>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-2 text-center">
-            <div class="row">
-        <button type="button" id="pp1" class="btn btn-sm btn-light">
-        <svg style="display: none" id= "play"><use href="#play-icon" fill="red"/></svg>
-        <svg id= "pause"><use href="#pause-icon" fill="red"/></svg>
-      </button>
-      </div>
-        </div>
-      <div class="col-md-1 text-center">
-        <button type="button" id="vol1" class="btn btn-xs btn-light">
-        <svg><use href="#volume-low" fill="red"/></svg>
-        </button>
-        </div>
-        <div class="col-md-2 text-center">
-        <input id="volslider" type="range" min="0" max="100" value="{{slider2}}" />
-      </div>
-      <div class="col-md-2 text-center">
-
-        <select id="pbspeed" class="bootstrap-select", onchange="emitSpeedChange()">
-            <option value="1" selected="selected">0.5x</option>
-            <option value="2">0.75x</option>
-            <option value="3">1.0x</option>
-            <option value="4">1.25x</option>
-            <option value="5">1.5x</option>
-            <option value="6">1.75x</option>
-            <option value="7">2.0x</option>
-          </select>
-        <!--
- -->
-    </div>
-          <div class="col-md-1 text-right">
-      <button type="button" id="cc" class="btn btn-sm btn-light">cc
-      </button>
-          </div>
-
-            <div class="col-md-1 text-right">
-              <button type="button" id="fs" class="btn btn-sm btn-light">
-                <svg><use href="#fullscreen" fill="red"/></svg>
-              </button>
-            </div>
-        </div>
-
-      </div>
-
-      <svg style="display: none">
-        <defs>
-          <symbol id="pause-icon" viewBox="0 0 24 24">
-            <path d="M14.016 5.016h3.984v13.969h-3.984v-13.969zM6 18.984v-13.969h3.984v13.969h-3.984z"></path>
-          </symbol>
-
-          <symbol id="play-icon" viewBox="0 0 24 24">
-            <path d="M8.016 5.016l10.969 6.984-10.969 6.984v-13.969z"></path>
-          </symbol>
-
-          <symbol id="volume-high" viewBox="0 0 24 24">
-          <path d="M14.016 3.234q3.047 0.656 5.016 3.117t1.969 5.648-1.969 5.648-5.016 3.117v-2.063q2.203-0.656 3.586-2.484t1.383-4.219-1.383-4.219-3.586-2.484v-2.063zM16.5 12q0 2.813-2.484 4.031v-8.063q1.031 0.516 1.758 1.688t0.727 2.344zM3 9h3.984l5.016-5.016v16.031l-5.016-5.016h-3.984v-6z"></path>
-          </symbol>
-
-          <symbol id="volume-low" viewBox="0 0 24 24">
-          <path d="M5.016 9h3.984l5.016-5.016v16.031l-5.016-5.016h-3.984v-6zM18.516 12q0 2.766-2.531 4.031v-8.063q1.031 0.516 1.781 1.711t0.75 2.32z"></path>
-          </symbol>
-
-          <symbol id="volume-mute" viewBox="0 0 24 24">
-          <path d="M12 3.984v4.219l-2.109-2.109zM4.266 3l16.734 16.734-1.266 1.266-2.063-2.063q-1.547 1.313-3.656 1.828v-2.063q1.172-0.328 2.25-1.172l-4.266-4.266v6.75l-5.016-5.016h-3.984v-6h4.734l-4.734-4.734zM18.984 12q0-2.391-1.383-4.219t-3.586-2.484v-2.063q3.047 0.656 5.016 3.117t1.969 5.648q0 2.203-1.031 4.172l-1.5-1.547q0.516-1.266 0.516-2.625zM16.5 12q0 0.422-0.047 0.609l-2.438-2.438v-2.203q1.031 0.516 1.758 1.688t0.727 2.344z"></path>
-          </symbol>
-
-          <symbol id="fullscreen" viewBox="0 0 24 24">
-          <path d="M14.016 5.016h4.969v4.969h-1.969v-3h-3v-1.969zM17.016 17.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 9.984v-4.969h4.969v1.969h-3v3h-1.969zM6.984 14.016v3h3v1.969h-4.969v-4.969h1.969z"></path>
-          </symbol>
-
-          <symbol id="fullscreen-exit" viewBox="0 0 24 24">
-          <path d="M15.984 8.016h3v1.969h-4.969v-4.969h1.969v3zM14.016 18.984v-4.969h4.969v1.969h-3v3h-1.969zM8.016 8.016v-3h1.969v4.969h-4.969v-1.969h3zM5.016 15.984v-1.969h4.969v4.969h-1.969v-3h-3z"></path>
-          </symbol>
-
-          <symbol id="pip" viewBox="0 0 24 24">
-          <path d="M21 19.031v-14.063h-18v14.063h18zM23.016 18.984q0 0.797-0.609 1.406t-1.406 0.609h-18q-0.797 0-1.406-0.609t-0.609-1.406v-14.016q0-0.797 0.609-1.383t1.406-0.586h18q0.797 0 1.406 0.586t0.609 1.383v14.016zM18.984 11.016v6h-7.969v-6h7.969z"></path>
-          </symbol>
-        </defs>
-      </svg>
+</script>

@@ -56,26 +56,28 @@ def changeName():
 
 
 @main.route('/changeroom', methods=['POST'])
-def changeRoom():
+def joinRoom():
     data = request.get_json()
-    newRoom = data['room']
-    if validate_newroom(newRoom):
-        session['room'] = newRoom
-        name = session.get('name', '')
-        if name != '':
-            session['joint'] = "{}.{}".format(newRoom, name)
-            print(session)
-            url = (url_for('.chat', room=newRoom))
-            #return redirect(url_for('.chat', room=newRoom))
-            return json.dumps({'url':url,
-            'msg':'Going to the room...'})
+    room = data['room']
+    name = data['name']
+    name, msg_ = validate_newname(name)
+    if (name!= "") and (validate_newroom(room)):
+        session['room'] = room
+        session['name'] = name
+        session['joint'] = "{}.{}".format(room, name)
+        print(session)
+        url = (url_for('.chat', room=room))
+        #return redirect(url_for('.chat', room=newRoom))
+        return json.dumps({'url':url,
+        'msg':'Going to the room...'})
 
-        else:
-
-            return json.dumps({'msg':'You need a valid screen name to proceed'})
-
-    else:
+    elif (name!= "") and (validate_newroom(room)!=True):
+        session['name'] = name
         return json.dumps({'msg':'Cannot go into this room. Either create a new one, or provide a valid room link.'})
+
+    elif (name == ""):
+        print('last elif block')
+        return json.dumps({'msg':'You need a valid screen name to proceed'})
 
 @main.route('/chat/<room>',  methods=['GET'])
 def chat(room):

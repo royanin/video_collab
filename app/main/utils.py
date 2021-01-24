@@ -77,8 +77,9 @@ def validate_newname(name):
         msg_ = "Name change successful."
 
     else:
-        msg_ = "We chose a random name for you; acceptable names are 6-20 characters long, and contain letters and numbers only."
-        name = ''.join(random.choices(string.ascii_lowercase, k=8))
+        msg_ = "Acceptable names are 6-20 characters long, and contain letters and numbers only."
+        #name = ''.join(random.choices(string.ascii_lowercase, k=8))
+        name = ""
 
     return name, msg_
 
