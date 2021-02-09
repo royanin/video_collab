@@ -10,11 +10,11 @@ def create_app(debug=False):
     app = Flask(__name__)
     app.debug = debug
     app.config['SECRET_KEY'] = 'gjr39dkjn344_!67#'
-    app.config['db_file'] = os.path.join(basedir, '../data/chat_messages.sqlite')
+    app.config['db_file'] = os.path.join(basedir, '../data/rooms_created.sqlite')
     #print(app.config['db_file'])
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
-    socketio.init_app(app)
+    socketio.init_app(app, logger=True, engineio_logger=True)
     return app

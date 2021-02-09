@@ -3,7 +3,7 @@ from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from datetime import datetime,timezone
 import sqlite3
-from .utils import write_chat, read_chat
+from .utils import record_room_create, read_room_create
 import time
 
 
@@ -17,7 +17,7 @@ def joined(message):
 
     emit('status', {'msg': session.get('name') + ' joined the chat!'}, room=room,  broadcast=True, include_self=False)
 
-
+'''
 @socketio.on('text', namespace='/chat')
 def text(message):
     """Sent by a client when the user entered a new message.
@@ -43,7 +43,7 @@ def value_changed(message):
     #print(session)
     values[message['who']] = message['data']
     emit('update value', message, room=room)
-
+'''
 
 @socketio.on('state update', namespace='/chat')
 def playpause(message):

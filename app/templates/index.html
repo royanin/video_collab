@@ -22,13 +22,13 @@
                 value="{{ session['room'] }}">
               </div>
               <div class="text-center">
-              <button type="submit"  onclick="joinRoom()" class="btn btn-primary">Join room by URL</button>
+              <button type="submit"  onclick="gotoRoom()" class="btn btn-primary">Join room by URL</button>
               <p><br> <em>OR</em> </p>
               <button type="submit"  onclick="createRoom()" class="btn btn-dark">Create a new room</button>
               </div>
             </form>
             </div>
-            <div id="notif">
+            <div class="text-center" id="notif">{{ session['msg'] }}
             </div>
           </div>
   </div>
@@ -36,7 +36,7 @@
 
 <script  type="text/javascript" charset="utf-8">
   //Function to join a room:
-  function joinRoom(){
+  function gotoRoom(){
     roomname = $('#roomname').val();
     username = $('#username').val();
     if (username !== ''){
@@ -49,8 +49,43 @@
         success: function(response){
           //$("#showName").load(" #showName");
           //document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
-          document.getElementById("notif").innerHTML = response['msg'];
-          window.location = response['url'];
+          //document.getElementById("notif").innerHTML = response['msg'];
+          if (response['msg']=="Success!"){
+            window.location = response['url'];
+          }
+          /*else {
+            alert({{ session['msg'] }});
+          }*/
+        },
+        error: function(error){
+            document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
+          }
+        });
+    }
+
+  }
+
+  //Function to create a new room:
+  function createRoom(){
+    username = $('#username').val();
+    if (username !== ''){
+      $.ajax({
+        url: "{{ url_for('main.createRoom') }}",
+        data: JSON.stringify({'name': username}),
+        type: 'POST',
+        contentType: "application/json",
+        dataType: 'json',
+        success: function(response){
+          //$("#showName").load(" #showName");
+          //document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
+          //document.getElementById("notif").innerHTML = response['msg'];
+          if (response['msg']=="Success!"){
+            window.location = response['url'];
+          }
+          /*else {
+            alert({{ session['msg'] }});
+          }*/
+
         },
         error: function(error){
             document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
@@ -61,46 +96,6 @@
   }
 
 
-  //Function to change/choose a name:
-  function changeRoomname(){
-    roomname = $('#roomname').val();
-    $.ajax({
-      url: "{{ url_for('main.changeName') }}",
-      data: JSON.stringify({'room': roomname}),
-      type: 'POST',
-      contentType: "application/json",
-      dataType: 'json',
-      success: function(response){
-        //$("#showName").load(" #showName");
-        //document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
-        document.getElementById("notif").innerHTML = response['msg'];
-        window.location = response['url'];
-      },
-      error: function(error){
-          document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
-        }
-      });
-  }
-
-  //Function to change/choose a name:
-  function changeUsername(){
-    username = $('#username').val();
-    $.ajax({
-      url: "{{ url_for('main.changeName') }}",
-      data: JSON.stringify({'name': username}),
-      type: 'POST',
-      contentType: "application/json",
-      dataType: 'json',
-      success: function(response){
-        //$("#showName").load(" #showName");
-        document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
-        document.getElementById("notif").innerHTML = response['msg'];
-      },
-      error: function(error){
-          document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
-        }
-      });
-  }
 
 </script>
 {% endblock %}

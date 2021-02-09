@@ -3,7 +3,7 @@ from . import main
 from .forms import LoginForm
 #from .utils import read_chat, write_chat
 import sqlite3, json
-from .utils import write_chat, read_chat, parse_url, validate_newname, validate_newroom
+from .utils import record_room_create, read_room_create, parse_url, validate_newname, validate_newroom
 import uuid
 
 
@@ -35,11 +35,7 @@ def index():
         #form.room.data = session.get('room', '')
 
     return render_template('index.html', form=form, ret_list=[])
-    '''
-@main.route('/', methods=['GET'])
-def index():
 
-    return render_template('index.html')
 
 @main.route('/changename', methods=['POST'])
 def changeName():
@@ -52,54 +48,6 @@ def changeName():
         session['joint'] = "{}.{}".format(room, session['name'])
 
     return json.dumps({'name':newName, 'msg':msg_})
-
-
-
-@main.route('/changeroom', methods=['POST'])
-def joinRoom():
-    data = request.get_json()
-    room = data['room']
-    name = data['name']
-    name, msg_ = validate_newname(name)
-    if (name!= "") and (validate_newroom(room)):
-        session['room'] = room
-        session['name'] = name
-        session['joint'] = "{}.{}".format(room, name)
-        print(session)
-        url = (url_for('.chat', room=room))
-        #return redirect(url_for('.chat', room=newRoom))
-        return json.dumps({'url':url,
-        'msg':'Going to the room...'})
-
-    elif (name!= "") and (validate_newroom(room)!=True):
-        session['name'] = name
-        return json.dumps({'msg':'Cannot go into this room. Either create a new one, or provide a valid room link.'})
-
-    elif (name == ""):
-        print('last elif block')
-        return json.dumps({'msg':'You need a valid screen name to proceed'})
-
-@main.route('/chat/<room>',  methods=['GET'])
-def chat(room):
-
-    """Chat room. The user's name and room must be stored in
-    the session."""
-    print(session)
-
-    name = session.get('name', '')
-    joint = session.get('joint', '')
-    #Check if this roomId exists and if it's active
-    #To be implemented. For now assume it's OK:
-    session['room'] = room
-
-    if name == '':
-        return redirect(url_for('.index'))
-
-    elif joint != "{}.{}".format(room, name):
-        return redirect(url_for('.index'))
-
-    else:
-        return render_template('room.html', name=name, room=room)
 
 @main.route('/morechat', methods=['POST'])
 def getchat():
@@ -132,6 +80,106 @@ def getchat():
 
     else:
         return(msg)
+
+'''
+
+@main.route('/', methods=['GET'])
+def index():
+
+    return render_template('index.html')
+
+
+
+@main.route('/createroom', methods=['POST'])
+def createRoom():
+    data = request.get_json()
+    #room = data['room']
+    name = data['name']
+    name, msg_ = validate_newname(name)
+    if (name!= ""):
+        session['name'] = name
+        u = uuid.uuid4()
+        room = u.hex
+        session['room'] = room
+        record_room_create(room)
+        session['joint'] = "{}.{}".format(room, name)
+        session['msg'] = 'Success!'
+        url = (url_for('.chat', room=room))
+        return json.dumps({'url':url,
+        'msg': session['msg']
+        })
+
+    elif (name == ""):
+        #return json.dumps({'msg':'You need a valid screen name to proceed'})
+        print("not a good name")
+        session['name'] = ""
+        session['room'] = ""
+        session['joint'] = ""
+
+        #url = (url_for('.index'))
+        session['msg'] = 'You need a valid screen name to proceed'
+        return json.dumps({
+        'msg': session['msg']
+        })
+
+
+@main.route('/gotoroom', methods=['POST'])
+def joinRoom():
+    print("in join room function")
+    data = request.get_json()
+    room = data['room']
+    name = data['name']
+    name, msg_ = validate_newname(name)
+    print('joining a room:',name, msg_)
+    if (name!= "") and (validate_newroom(room) is True):
+        session['room'] = room
+        session['name'] = name
+        session['joint'] = "{}.{}".format(room, name)
+        print(session)
+        session['msg'] = 'Success!'
+        url = (url_for('.chat', room=room))
+        #return redirect(url_for('.chat', room=newRoom))
+        return json.dumps({'url':url,
+        'msg':  session['msg']
+        })
+
+    elif (name!= "") and (validate_newroom(room) is False):
+        session['name'] = name
+        print("bad room name")
+        session['msg'] = 'Cannot go into this room. Either create a new one, or provide a valid room link.'
+        return json.dumps({
+        'msg': session['msg']
+        })
+
+    elif (name == ""):
+        print('last elif block')
+        session['name'] = ""
+        print("bad name")
+        session['msg'] = 'You need a valid screen name to proceed'
+        return json.dumps({'msg': session['msg']
+        })
+
+@main.route('/chat/<room>',  methods=['GET'])
+def chat(room):
+
+    """Chat room. The user's name and room must be stored in
+    the session."""
+    print(session)
+
+    name = session.get('name', '')
+    joint = session.get('joint', '')
+    #Check if this roomId exists and if it's active
+    #To be implemented. For now assume it's OK:
+    session['room'] = room
+
+    if name == '':
+        return redirect(url_for('.index'))
+
+    elif joint != "{}.{}".format(room, name):
+        return redirect(url_for('.index'))
+
+    else:
+        return render_template('room.html', name=name, room=room)
 
 
 

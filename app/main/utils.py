@@ -2,7 +2,8 @@ import sqlite3, json
 from datetime import datetime,timezone
 import random, string
 from urllib.parse import urlparse, parse_qs
-
+from flask import current_app
+'''
 def write_chat(conn, ts, room_id, username, text):
     c = conn.cursor()
     sql_ = """INSERT INTO chat (timestamp, room_id, username, text)
@@ -31,6 +32,8 @@ def read_chat(conn, room_id, limit_=25, timestamp_=datetime.now(timezone.utc).ti
 
     return (ret_list_json)
 
+'''
+
 '''def parse_url(url_input):
     if url_input != None:
         return ("ytid", "-Qr8QrMG3CQ")
@@ -38,6 +41,37 @@ def read_chat(conn, room_id, limit_=25, timestamp_=datetime.now(timezone.utc).ti
     else:
         return (None, None)
 '''
+
+def record_room_create(room_id):
+    ts = datetime.now(timezone.utc).timestamp()
+    db_file = current_app.config['db_file']
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+    sql_ = """INSERT INTO roomCreate (timestamp, room_id)
+     VALUES (?,?)"""
+    print('in record_room_create',sql_)
+    c.execute(sql_, (ts, room_id))
+    conn.commit()
+    c.close()
+
+    return ()
+
+def read_room_create(room_id, time_window = 600):
+    ts = datetime.now(timezone.utc).timestamp()
+    db_file = current_app.config['db_file']
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+    #get chats for a room
+    #sql_ = """SELECT * FROM roomCreate WHERE room_id = '{}' and timestamp >={} LIMIT 1""".format(room_id, timestamp_-time_window)
+    sql_ = """SELECT * FROM roomCreate WHERE room_id = '{}' LIMIT 1""".format(room_id) #no check on timestamp
+    print(sql_)
+    c.execute(sql_)
+    ret_list = []
+    ret_list = c.fetchall()
+    if len(ret_list)>0:
+        return 'room_exists'
+    else:
+        return 'room_notfound'
 
 def parse_url(url):
     """Returns Video_ID extracting from the given url of Youtube
@@ -84,7 +118,13 @@ def validate_newname(name):
     return name, msg_
 
 def validate_newroom(room):
-    return True
+    print('in util validate_newroom: {}'.format(read_room_create(room)))
+    if read_room_create(room)=="room_exists":
+        print("room {} exists".format(room))
+        return True
+    else:
+        print("room {} DOES NOT exist".format(room))
+        return False
     '''
     if len(room)==32:
         return True
