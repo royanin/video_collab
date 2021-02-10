@@ -187,8 +187,9 @@ def chat(room):
 def getURL():
     data = request.get_json()
     url_input = data['url']
+    print('url_input:',url_input)
     url_type, url_key = parse_url(url_input)
-
+    print('parsed_url:', url_type, url_key)
     if url_type != None and url_key != None:
         return json.dumps({'type':url_type, 'key':url_key})
 

@@ -36,7 +36,7 @@ def read_chat(conn, room_id, limit_=25, timestamp_=datetime.now(timezone.utc).ti
 
 '''def parse_url(url_input):
     if url_input != None:
-        return ("ytid", "-Qr8QrMG3CQ")
+        return ("yt", "-Qr8QrMG3CQ")
 
     else:
         return (None, None)
@@ -78,6 +78,7 @@ def parse_url(url):
 
     Examples of URLs:
       Valid:
+        #Youtube:
         'http://youtu.be/_lOT2p_FCvA',
         'www.youtube.com/watch?v=_lOT2p_FCvA&feature=feedu',
         'http://www.youtube.com/embed/_lOT2p_FCvA',
@@ -85,23 +86,31 @@ def parse_url(url):
         'https://www.youtube.com/watch?v=rTHlyTphWP0&index=6&list=PLjeDyYvG6-40qawYNR4juzvSOg-ezZ2a6',
         'youtube.com/watch?v=_lOT2p_FCvA',
 
+        #Panopto:
+        'xyz.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=abd...'
+        'https://xyz.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=401da229-c9a6-49e4-aeab-ab91015553f6'
+
       Invalid:
         'youtu.be/watch?v=_lOT2p_FCvA',
     """
 
 
-    if url.startswith(('youtu', 'www')):
-        url = 'http://' + url
+    #if url.startswith(('youtu', 'www')):
+    #    url = 'http://' + url
+    if not url.startswith(("http://", "https://")):
+        url = "http://"+url
 
     query = urlparse(url)
 
     if 'youtube' in query.hostname:
         if query.path == '/watch':
-            return ("ytid", parse_qs(query.query)['v'][0])
+            return ("yt", parse_qs(query.query)['v'][0])
         elif query.path.startswith(('/embed/', '/v/')):
-            return ("ytid", query.path.split('/')[2])
+            return ("yt", query.path.split('/')[2])
     elif 'youtu.be' in query.hostname:
-        return ("ytid", query.path[1:])
+        return ("yt", query.path[1:])
+    elif 'hosted.panopto.com' in query.hostname:
+        return ("pt", (query.netloc, parse_qs(query.query)['id'][0]))
     else:
         raise ValueError
 
