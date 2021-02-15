@@ -194,4 +194,4 @@ def getURL():
         return json.dumps({'type':url_type, 'key':url_key})
 
     else:
-        return None
+        return json.dumps({'type':"", 'key':""})

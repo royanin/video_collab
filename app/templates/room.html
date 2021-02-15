@@ -446,10 +446,14 @@
                    contentType: "application/json",
                    dataType: 'json',
                    success: function(response){
-                     if(response['type']!=''){
+                     if(response['type']!='' || response['key']!=''){
                        videoLoader(response['type'], response['key']);
+                       socket.emit('video update', response); //broadcast the new video to everyone
                      }
-                     socket.emit('video update', response); //broadcast the new video to everyone
+                     else {
+                       alert("Sorry, we could not parse the link you provided...");
+                     }
+                     //socket.emit('video update', response); //broadcast the new video to everyone
                    },
                    error: function(error){
                        alert("Sorry, we could not parse the link you provided...");

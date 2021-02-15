@@ -1,0 +1,12 @@
+#!/bin/env python
+from app import create_app, socketio
+#import os
+
+#Check if the db already exists. If not, create the file and the table.
+#This is totally hacky -- need to change once more persistence is required.
+#if os.isfile("data/i")
+
+app = create_app(debug=True)
+
+if __name__ == '__main__':
+    socketio.run(app)

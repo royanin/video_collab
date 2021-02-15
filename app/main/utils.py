@@ -100,19 +100,23 @@ def parse_url(url):
     if not url.startswith(("http://", "https://")):
         url = "http://"+url
 
-    query = urlparse(url)
 
-    if 'youtube' in query.hostname:
-        if query.path == '/watch':
-            return ("yt", parse_qs(query.query)['v'][0])
-        elif query.path.startswith(('/embed/', '/v/')):
-            return ("yt", query.path.split('/')[2])
-    elif 'youtu.be' in query.hostname:
-        return ("yt", query.path[1:])
-    elif 'hosted.panopto.com' in query.hostname:
-        return ("pt", (query.netloc, parse_qs(query.query)['id'][0]))
-    else:
-        raise ValueError
+    if url != "http://":
+        query = urlparse(url)
+    try:
+        if 'youtube' in query.hostname:
+            if query.path == '/watch':
+                return ("yt", parse_qs(query.query)['v'][0])
+            elif query.path.startswith(('/embed/', '/v/')):
+                return ("yt", query.path.split('/')[2])
+        elif 'youtu.be' in query.hostname:
+            return ("yt", query.path[1:])
+        elif 'hosted.panopto.com' in query.hostname:
+            return ("pt", (query.netloc, parse_qs(query.query)['id'][0]))
+        else:
+            raise ValueError
+    except Exception as e:
+        return None, None
 
 
 def validate_newname(name):
