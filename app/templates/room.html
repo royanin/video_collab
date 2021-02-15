@@ -9,19 +9,11 @@
 <div class="container-fluid">
     <h5>Hi {{ session.name }}! Welcome to room: {{ session.room }}</h5>
 </div>
+<hr>
 <div class="container-fluid">
 <div class="flex">
-  <div id="a"  class="split split-horizontal">
-      <div id="c" class="split content">
-        <div class="container">
-          <!--<div class="embed-responsive embed-responsive-4by3">-->
-          <div id="vidBox">
-            <div id="player" class="player"></div>
-          </div>
-            <!-- <div class="player" id="player"></div>-->
+    <div id="a">
 
-        <!--</div>-->
-        <br>
         <div>
           <div id="loadNewVideoButton" class="input-group mb-3">
             <input type="text" id="videoURL" class="form-control" placeholder='e.g., https://www.youtube.com/watch?v=-Qr8QrMG3CQ'
@@ -32,41 +24,35 @@
           </div>
           <span><small>Load a video by URL. <em>Others will see it after you hit "Load"</em></small></span>
           </div>
+          <div id="vidBox">
+            <div id="player" class="player"></div>
           </div>
-      </div>
-      <div id="d" class="split content">
-        <div class="container">
-          <span>https://www.youtube.com/watch?v=Ll-lia-FEIY<br>
-            https://www.youtube.com/watch?v=XXo8KnfPCXM
-          </span>
+          <div><span>https://www.youtube.com/watch?v=Ll-lia-FEIY<br>
+            https://www.youtube.com/watch?v=XXo8KnfPCXM<br>
+            https://demo.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=401da229-c9a6-49e4-aeab-ab91015553f6
+          </span></div>
+          <div id='vidAlertBox' class="alert alert-light" role="alert">
+            <em><span id='vidAlert'></span></em>
+          </div>
         <!--<button class="btn btn-sm btn-primary" id="jitsiStart" type="button">Start Video/Audio chat</button>
         <div class="meet2" id="meet"></div>-->
-        <div id="conversejs"></div>
+        <div class="converse-container">
+          <div id="conversejs"></div>
         </div>
       </div>
 
-  </div>
-  <div id="b"  class="split content split-horizontal">
-    <div>
-      <div class="container">
-        <div id='vidAlertBox' class="alert alert-light" role="alert">
-          <em><span id='vidAlert'></span></em>
-        </div>
 
-        <div id ="notepad2" class="notepad">
-                <!-- Create the editor container -->
-                <div id="editor">
-                  <button type="button" id="y-connect-btn">Disconnect</button>
-                  <!--<script src="/static/quill.bundle.js"></script>-->
-                  <!--<script type="application/javascript" src="quill.js" crossorigin="anonymous"></script>-->
-                </div>
-        </div>
-        </div>
+    <div id="b">
+          <div id ="notepad2" class="notepad">
+                  <!-- Create the editor container -->
+                  <div id="editor">
+                  </div>
+          </div>
+
     </div>
-  </div>
-</div>
-</div>
 
+</div>
+</div>
 
 
       <script type="text/javascript" charset="utf-8">
@@ -75,32 +61,13 @@
 
         Split(['#a', '#b'], {
           direction: 'horizontal',
-          sizes: [60, 40],
+          sizes: [50, 50],
+          minSize:[300,300],
         gutterSize: 8,
         cursor: 'col-resize',
-        /*onDragEnd:  function() {
-          //localStorage.setItem('split-sizes', JSON.stringify(sizes
-          getSize();
-          //alert('hahaha ab');
-        },*/
       }
-        )
+    )
 
-        Split(['#c', '#d'], {
-            direction: 'vertical',
-            sizes: [50, 50],
-            min: 200,
-            gutterSize: 20,
-            cursor: 'row-resize',
-            onDragEnd:  function() {
-                  //alert('hahaha cd');
-                  //getSize();
-                  //localStorage.setItem('split-sizes', JSON.stringify(sizes))
-              },
-            }
-        )
-
-        //console.log(yjquill);
 
 
         window.Y = yjquill.Y;
@@ -113,7 +80,7 @@
 
         window.addEventListener('load', () => {
           const ydoc = new Y.Doc()
-          const provider = new WebsocketProvider('ws://localhost:1234', "{{ session.room }}", ydoc)
+          const provider = new WebsocketProvider('wss://demos.yjs.dev', "{{ session.room }}", ydoc)
           const ytext = ydoc.getText('quill')
           //const editorContainer = document.createElement('div')
           //editorContainer.setAttribute('id', 'editor')
@@ -148,44 +115,29 @@
 
         })
 
-        /*
+
          converse.initialize({
             bosh_service_url: 'https://conversejs.org/http-bind/', // Please use this connection manager only for testing purposes
             jid: 'nomnom.im',
-            show_controlbox_by_default: true,
-            allow_muc_invitations: false, // Doesn't make sense to allow because only
-                                          // roster contacts can be invited
-            allow_contact_requests: false, // Contacts from other servers cannot,
-                                           // be added and anonymous users don't
-                                           // know one another's JIDs, so disabling.
+
             authentication: 'anonymous',
             allow_logout: false,
             auto_login: true,
-            theme: 'concord',
+            //theme: 'concord',
             auto_join_rooms: [
                 //'anonymous@conference.nomnom.im',
                 {'jid': '{{ session.room }}@conference.nomnom.im', 'nick': '{{ session.name }}' }
             ],
-            //notify_all_room_messages: [
-            //    'anonymous@conference.nomnom.im',
-            //],
             keepalive: true,
             hide_muc_server: true, // Federation is disabled, so no use in
             // showing the MUC server.
             play_sounds: true,
-            show_controlbox_by_default: false,
-            strict_plugin_dependencies: false,
             view_mode: 'overlayed',
             locked_muc_domain: false,
             muc_show_logs_before_join: true,
-            //jid: '{{ session.room }}/http-bind/',
-            //authentication: 'prebind',
-            //prebind_url: 'https://localhost:7070/api/prebind',
-            //auto_login: true,
-            //allow_logout: false,
             //debug: true
         });
-        */
+
 
 
         /*function getSize(){
@@ -248,55 +200,6 @@
                  };
 
 
-
-               function parseUrl(url){
-                 //just youtube for now...
-                 var vidId = url.match(/[?&]v=([^&]+)/);
-                 return {'type':'yt', 'vidId':vidId[1]}
-               }
-
-               /*
-               //Might not be necessary -- included this for Youtube, Vimeo and Panopto in html_header
-               // Code to load the IFrame player API code asynchronously
-               var tag = document.createElement('script');
-               //var startTime = 0;
-
-               //tag.src = "https://developers.panopto.com/scripts/embedapi.min.js"; //for panopto
-               tag.src = "https://www.youtube.com/iframe_api";  //for youtube
-
-               var firstScriptTag = document.getElementsByTagName('script')[0];
-               firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-               */
-               //console.log(firstScriptTag);
-               //alert(tag);
-
-               //var embedApi;
-
-               /*
-               function onPanoptoIframeReady()
-               {
-                   embedApi = new EmbedApi("player", {
-                       width: "750",
-                       height: "422",
-                       //This is the URL of your Panopto site
-                       serverName: "mit.hosted.panopto.com",
-                       sessionId:"b987cb43-22f6-43ed-91f6-ac770149bc6e",
-                       videoParams: { // Optional parameters
-                       //interactivity parameter controls if the user sees table of contents, discussions, notes, & in-video search
-                           "interactivity": "search",
-                           "showtitle": "false",
-                           "hideoverlay":"false"
-                       },
-                       events: {
-                           //"onIframeReady": onIframeReady,
-                           "onReady": onVideoReady,
-                           "onStateChange": onStateUpdate,
-                           "onPlaybackRateChange": onPlaybackRateChange
-                       }
-                   });
-               } */
-
-
                var playerEvents =  {
                  'onReady': onVideoReady,
                  'onStateChange': onStateUpdate,
@@ -324,9 +227,14 @@
                  // Code to load the IFrame player API code asynchronously
                  var tag = document.createElement('script');
 
-                 //tag.src = "https://developers.panopto.com/scripts/embedapi.min.js"; //for panopto
+                 //
                  if (vtype=='yt'){
+                   console.log('downloading youtube js');
                    tag.src = "https://www.youtube.com/iframe_api";  //for youtube
+                 }
+                 else if (vtype=='pt') {
+                   console.log('downloading panoptp js');
+                   tag.src = "https://developers.panopto.com/scripts/embedapi.min.js"; //for panopto
                  }
                  console.log({vtype, videoId});
 
@@ -334,17 +242,37 @@
                  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 
-
                  console.log('in videoLoader');
                  function onIframeAPIReady(vtype, videoId) {
-                   console.log('in onYouTubeIframeAPIReady');
-                   embedApi = new YT.Player('player', {
-                     width: '100%',
-                     videoId: videoId,
-                     playerVars: { 'autoplay': 0, 'start': Math.floor(startTime)},
-                     events: playerEvents
-                   });
-                 }
+                   console.log('in onIframeAPIReady');
+                   if(vtype=='yt'){
+                     console.log('creating youtube player');
+                     embedApi = new YT.Player('player', {
+                       width: '100%',
+                       height: '480px',
+                       videoId: videoId,
+                       playerVars: { 'autoplay': 0, 'start': Math.floor(startTime)},
+                       events: playerEvents
+                     });
+                   }
+                   else if(vtype=='pt'){
+                     console.log('creating panopto player');
+                     embedApi = new EmbedApi("player", {
+                         width: "100%",
+                         serverName: videoId[0],
+                         sessionId:  videoId[1],
+                         autoplay: false,
+                         videoParams: { // Optional parameters
+                         //interactivity parameter controls if the user sees table of contents, discussions, notes, & in-video search
+                             "interactivity": "search",
+                             "showtitle": "false",
+                             "hideoverlay":"false"
+                         },
+                         events: playerEvents
+                     });
+                   }
+
+                 };
 
                  setTimeout(function(){
                    onIframeAPIReady(vtype, videoId);
@@ -368,18 +296,12 @@
                         if (embedApi) {
                           var vidURL = embedApi.getVideoUrl();
 
-                          //get the video type (Youtube, Vimeo, Panopto etc.) and the link
-                          var videoTypeLink = parseUrl(vidURL);
-                          console.log(videoTypeLink);
                           embedApi.setPlaybackRate(1.0);
                           stateNow = getCompleteState();
                           embedApi.pauseVideo(); //Better to stop video and wait to synch
-                          stateNow['vidType'] = videoTypeLink['type'];
-                          stateNow['vidURL'] = videoTypeLink['vidId'];
-                          //alert([stateNow['vidType'], stateNow['vidURL']]);
+                          stateNow['vidURL'] = vidURL
                           document.getElementById("vidAlert").innerHTML = 'Syncing video for the newcomer';
                           socket.emit('video sync', stateNow);
-                          //setTimeout(function(){ socket.emit('video sync', stateNow); }, 500);
 
                         }
 
@@ -391,24 +313,33 @@
                       var timeEvent = new Date(1000*msg.when).toLocaleTimeString();
                      //player state: this is working on broadcast -- the signal sender should not receive this
                        if(embedApi){
-                         if (msg['pstate']!== embedApi.getPlayerState()){
+                         if (typeof embedApi.getPlayerState == 'function'){
+                           pstate = embedApi.getPlayerState(); //this is for youtube
+                         }
+                         else {
+                           pstate = embedApi.getState(); // this is for Panopto
+                         }
+                         console.log('in update state');
+                         console.log(pstate);
+                         console.log(msg);
+                         if (msg['pstate']!== pstate){
                              if (msg['pstate']===2){
                                  document.getElementById("vidAlert").innerHTML = msg.who+' paused the video at '+timeEvent;
-                                 embedApi.seekTo(msg['ptime']);
                                  embedApi.pauseVideo();
+                                 embedApi.seekTo(Number(msg['ptime']));
 
                              }
                              else if (msg['pstate']===1){
                                  document.getElementById("vidAlert").innerHTML = msg.who+' started playing the video at '+timeEvent;
-                                 embedApi.seekTo(msg['ptime']);
+                                 embedApi.seekTo(Number(msg['ptime']));
                                  embedApi.playVideo();
                              }
                            }
                          //if (msg['pspeed']!== embedApi.getPlaybackRate()){
                          if (msg['what']=== "speed"){
                                  document.getElementById("vidAlert").innerHTML = msg.who+' changed the playback speed to '+msg.pspeed+'x at '+timeEvent;
-                                 embedApi.seekTo(msg['ptime']);
                                  embedApi.setPlaybackRate(msg['pspeed']);
+                                 embedApi.seekTo(Number(msg['ptime']));
 
                            }
                          }
@@ -429,7 +360,7 @@
 
                      socket.on('video synced', function(stateNow){
                        document.getElementById("vidAlert").innerHTML = 'Loading video...';
-                       videoLoader(stateNow['vidType'], stateNow['vidURL'], startTime = stateNow['ptime']);
+                       videoLoader(stateNow['vtype'], stateNow['vkey'], startTime = stateNow['ptime']);
                        document.getElementById("vidAlert").innerHTML = 'Video ready to play.';
                      });
 
@@ -463,20 +394,34 @@
                //The API calls this function when a player state change happens
                 function onStateUpdate(state)
                {
+                   //console.log('in onStateUpdate');
                    var currentState = getCompleteState();
+                   console.log('in onStateUpdate');
+                   console.log(embedApi);
+                   console.log(currentState);
                    socket.emit('state update', currentState);
                }
                function onPlaybackRateChange()
                {
+                   console.log('in onPlaybackRateChange');
                    var currentState = getCompleteState();
                    socket.emit('state update speed', currentState);
                }
 
 
                function getCompleteState(){
+                 console.log('in getCompleteState');
+                 //console.log(embedApi.getPlayerState());
+                 //console.log(embedApi.getState());
+                 if (typeof embedApi.getPlayerState == 'function'){
+                   pstate = embedApi.getPlayerState(); //this is for youtube
+                 }
+                 else {
+                   pstate = embedApi.getState(); // this is for Panopto
+                 }
                  return {
                  //'clientId': clientId,
-                 'pstate': embedApi.getPlayerState(),
+                 'pstate': pstate,
                  'pspeed': embedApi.getPlaybackRate(),
                  'ptime': (embedApi.getCurrentTime()).toFixed(2)};
                }

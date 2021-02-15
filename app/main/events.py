@@ -3,7 +3,7 @@ from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from datetime import datetime,timezone
 import sqlite3
-from .utils import record_room_create, read_room_create
+from .utils import record_room_create, read_room_create, parse_url
 import time
 
 
@@ -86,6 +86,9 @@ def syncing_video(stateNow):
     ts = datetime.now(timezone.utc).timestamp()
     room = session.get('room')
     username = session.get('name')
+    url_type, url_key = parse_url(stateNow['vidURL'])
+    stateNow['vtype'] = url_type
+    stateNow['vkey'] = url_key
     #time.sleep(0.1) #this ensures that the new client has time to render html
     print('stateNow',stateNow)
     emit('video synced', stateNow, room=room, broadcast=True, include_self=False)

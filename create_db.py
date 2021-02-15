@@ -1,6 +1,6 @@
 import sqlite3
 
-db_file = 'data/chat_messages.sqlite'
+db_file = 'data/rooms_created.sqlite'
 
 conn = sqlite3.connect(db_file)
 
@@ -8,6 +8,6 @@ conn = sqlite3.connect(db_file)
 c = conn.cursor()
 
 # Create table
-c.execute('''CREATE TABLE chat
-             (timestamp, room_id, username, text)''')
+c.execute('''CREATE TABLE roomCreate
+             (timestamp, room_id)''')
 conn.close()
