@@ -1,5 +1,4 @@
 __pycache__/*
 *.py[co]
-data/*
 logs/*
 instances.py
