@@ -8,7 +8,7 @@
 {% block content %}
   <div class="container-fluid">
           <div class="row">
-
+            {% include "side_panel_index.html" %}
             <!--<div class="col-md-6 offset-md-3"> -->
             <div class="col-md-6">
             <div  class="p-5 m-5">
@@ -18,7 +18,7 @@
               aria-label="Choose a name" aria-describedby="basic-addon2">
               <div class="input-group-append">
                 <!--<small class="text-muted">Letters and numbers only, 6-20 characters (e.g., <em>hgttg42</em>)</small>-->
-                <button class="btn btn-sm btn-outline-primart" onclick="gotoRoom()" type="button">Go!</button>
+                <button class="btn btn-sm btn-outline-warning" onclick="gotoRoom()" type="button">Go!</button>
               {#
                   <div class="text-center" id="notif">{{ session['msg'] }}
                #}
@@ -28,7 +28,6 @@
             <p><small>Entering room <span id="roomname">{{ session.room }}</span></small></p>
             </div>
             </div>
-            {% include "side_panel_index.html" %}
             </div>
     </div>
   </div>
@@ -37,7 +36,7 @@
   function gotoRoom(){
     roomname = $('#roomname').text();
     username = $('#username').val();
-    alert(roomname);
+    //alert(roomname);
     if (username !== ''){
       $.ajax({
         url: "{{ url_for('main.joinRoom') }}",
