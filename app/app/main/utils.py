@@ -123,6 +123,7 @@ def parse_url(url):
 
 
 def validate_newname(name):
+    '''
     if len(name)>=6 and len(name)<=20 and name.isalnum():
         msg_ = "Name change successful."
 
@@ -130,7 +131,11 @@ def validate_newname(name):
         msg_ = "Acceptable names are 6-20 characters long, and contain letters and numbers only."
         #name = ''.join(random.choices(string.ascii_lowercase, k=8))
         name = ""
-
+    '''
+    if name != "":
+        msg_ = "Name change successful."
+    else:
+        msg_ = "Let's try again. Shall we?"
     return name, msg_
 
 def validate_newroom(room):
