@@ -21,6 +21,45 @@
 width: 48%;
 Goes with notepad
 */
+#ShareRoom{
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  color: green;
+  padding: 4px;
+}
+
+.chatbox-title__text {
+  visibility: collapse;
+}
+.dropleft {
+  visibility: collapse;
+}
+.close-chatbox-button {
+  visibility: hidden;
+}
+.toggle_occupants {
+  visibility: hidden;
+}
+
+.chat-msg__avatar {
+  /*visibility: collapse;*/
+  border: 1px solid #C0C0C0;
+}
+
+.chat-head__desc {
+  visibility: hidden;
+  padding: 0.0rem 0rem 0.0rem 0rem
+  max-height: 0em;
+  margin-bottom: 0em;
+}
+
+.rightPanel{
+  color: #555;
+  font-size: 1.1em;
+  font-family: 'Montserrat', sans-serif;
+  /*background-color: #381a75;*/
+}
 
 #editor{
 
@@ -43,6 +82,7 @@ Goes with notepad
   .gutter.gutter-horizontal {
       cursor: ew-resize;
       height: 800px;
+      color: #333333;
   }
 
   .meet2 {

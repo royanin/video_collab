@@ -59,15 +59,18 @@ def record_room_create(room_id):
 def read_room_create(room_id, time_window = 600):
     ts = datetime.now(timezone.utc).timestamp()
     db_file = current_app.config['db_file']
+    print('room:', room_id)
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
     #get chats for a room
     #sql_ = """SELECT * FROM roomCreate WHERE room_id = '{}' and timestamp >={} LIMIT 1""".format(room_id, timestamp_-time_window)
-    sql_ = """SELECT * FROM roomCreate WHERE room_id = '{}' LIMIT 1""".format(room_id) #no check on timestamp
+    sql_ = """SELECT * FROM roomCreate WHERE room_id = '{}' LIMIT 5""".format(room_id) #no check on timestamp
+    #sql_ = """SELECT * FROM roomCreate LIMIT 1"""
     print(sql_)
     c.execute(sql_)
     ret_list = []
     ret_list = c.fetchall()
+    print(ret_list)
     if len(ret_list)>0:
         return 'room_exists'
     else:
@@ -131,7 +134,7 @@ def validate_newname(name):
     return name, msg_
 
 def validate_newroom(room):
-    print('in util validate_newroom: {}'.format(read_room_create(room)))
+    print('in util validate_newroom: {}'.format(room))
     if read_room_create(room)=="room_exists":
         print("room {} exists".format(room))
         return True

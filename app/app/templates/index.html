@@ -6,64 +6,26 @@
   {{ super() }}
 {% endblock %}
 {% block content %}
-  <div class="container">
-        <h3>Watch videos together</h3>
-        <div>
-
-            <div class="col-md-6 offset-md-3">
-            <form>
-              <div class="form-group">
-                <input type="text" class="form-control" id="username" aria-describedby="emailHelp"
-                placeholder="Enter screen name" value="{{ session['name'] }}">
-                <small class="text-muted">Letters and numbers only, 6-20 characters (e.g., <em>hgttg42</em>)</small>
+  <div class="container-fluid">
+          <div  class="row">
+            {% include "side_panel_index.html" %}
+            <!--<div class="col-md-6 offset-md-3"> -->
+            <div class="col-md-6">
+            <div  class="p-5 m-5">
+              <p class="p-5 m-5"></p>
+            <div id="createNewRoomButton" class="input-group mb-3">
+              <input type="text" id="username" class="form-control" placeholder='Choose a screen name'
+              aria-label="New room" aria-describedby="basic-addon2">
+              <div class="input-group-append">
+                <button class="btn btn-sm btn-outline-secondary" onclick="createRoom()" type="button">CREATE A NEW ROOM</button>
               </div>
-              <div class="form-group">
-                <input type="text" class="form-control" id="roomname" placeholder="Room name"
-                value="{{ session['room'] }}">
-              </div>
-              <div class="text-center">
-              <button type="submit"  onclick="gotoRoom()" class="btn btn-primary">Join room by URL</button>
-              <p><br> <em>OR</em> </p>
-              <button type="submit"  onclick="createRoom()" class="btn btn-dark">Create a new room</button>
-              </div>
-            </form>
             </div>
-            <div class="text-center" id="notif">{{ session['msg'] }}
             </div>
-          </div>
-  </div>
-
+            </div>
+            </div>
+    </div>
 
 <script  type="text/javascript" charset="utf-8">
-  //Function to join a room:
-  function gotoRoom(){
-    roomname = $('#roomname').val();
-    username = $('#username').val();
-    if (username !== ''){
-      $.ajax({
-        url: "{{ url_for('main.joinRoom') }}",
-        data: JSON.stringify({'room': roomname, 'name': username}),
-        type: 'POST',
-        contentType: "application/json",
-        dataType: 'json',
-        success: function(response){
-          //$("#showName").load(" #showName");
-          //document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
-          //document.getElementById("notif").innerHTML = response['msg'];
-          if (response['msg']=="Success!"){
-            window.location = response['url'];
-          }
-          /*else {
-            alert({{ session['msg'] }});
-          }*/
-        },
-        error: function(error){
-            document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
-          }
-        });
-    }
-
-  }
 
   //Function to create a new room:
   function createRoom(){
@@ -79,7 +41,7 @@
           //$("#showName").load(" #showName");
           //document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
           //document.getElementById("notif").innerHTML = response['msg'];
-          if (response['msg']=="Success!"){
+          if (response['msg']==="Success!"){
             window.location = response['url'];
           }
           /*else {

@@ -85,7 +85,6 @@ def getchat():
 
 @main.route('/', methods=['GET'])
 def index():
-
     return render_template('index.html')
 
 
@@ -129,6 +128,7 @@ def joinRoom():
     data = request.get_json()
     room = data['room']
     name = data['name']
+    print('joining a room:',room, name, session)
     name, msg_ = validate_newname(name)
     print('joining a room:',name, msg_)
     if (name!= "") and (validate_newroom(room) is True):
@@ -171,15 +171,15 @@ def chat(room):
     #Check if this roomId exists and if it's active
     #To be implemented. For now assume it's OK:
     session['room'] = room
-
+    print(session)
     if name == '':
-        return redirect(url_for('.index'))
+        return render_template("chooseName.html")
 
     elif joint != "{}.{}".format(room, name):
-        return redirect(url_for('.index'))
+        return render_template("chooseName.html")
 
     else:
-        return render_template('room.html', name=name, room=room)
+        return render_template('room.html', room=room)
 
 
 
