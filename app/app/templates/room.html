@@ -11,16 +11,16 @@
     <div class="col-md-3">
       <em>View-Note-Chat</em>
     </div>
-<div class="col-md-6 text-center">
+<div id='vidAlertBox' class="col-md-6 text-center">
 
-      <div id='vidAlertBox' class="alert alert-light" role="alert">
-        <em><span id='vidAlert'></span></em>
+      <!--<div  class="alert alert-light" role="alert">-->
+        <small><em><span id='vidAlert'></span></em></small>
         <!--<button class="btn btn-sm btn-outline-secondary" onclick="copyRoomName()" type="button">COPY ROOM URL</button>
         <input type="text" id="ShareRoom">-->
-      </div>
+      <!--</div>-->
 </div>
 <div class="col-md-3 text-right">
-Hi {{ session.name }}!
+Hi <em>{{ session.name }}!</em>
 </div>
 </div>
 
@@ -29,24 +29,23 @@ Hi {{ session.name }}!
     <div id="a">
 
         <div>
-          <div id="loadNewVideoButton" class="input-group mb-3">
+          <div id="loadNewVideoButton" class="input-group input-group-sm mb-3">
             <input type="text" id="videoURL" class="form-control" placeholder='e.g., https://www.youtube.com/watch?v=-Qr8QrMG3CQ'
             aria-label="New video URL" aria-describedby="basic-addon2">
             <div class="input-group-append">
-              <button class="btn btn-sm btn-outline-secondary" onclick="loadNewVideo()" type="button">LOAD VIDEO</button>
+              <button class="btn btn-xs btn-outline-secondary" onclick="loadNewVideo()" type="button">LOAD VIDEO</button>
             </div>
           </div>
           <div id="vidBox">
             <div id="player" class="player"></div>
           </div>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-secondary alert-dismissible fade show" role="alert">
               <strong>How-to:</strong>
               <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
               <ul>
-                <li>Copy and share the room URL via email/chat to invite someone to this room. Anyone in
-                the room can load a second video anytime -- it'll load and sync for everyone.</li>
+                <li>Copy and share the room URL via email/chat to invite someone to this room.</li>
                 <li>Copy-paste a Youtube video URL in the box above, and hit <em>LOAD VIDEO</em>. It'll
                   sync automatically for everyone as others join the room.</li>
                 <li>To the right is a shared scratchpad: you can take notes together and edit in realtime.

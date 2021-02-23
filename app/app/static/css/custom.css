@@ -21,6 +21,15 @@
 width: 48%;
 Goes with notepad
 */
+
+p {
+  font-size: 0.9em;
+}
+
+div {
+  font-size: 0.95em;
+}
+
 #ShareRoom{
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -54,7 +63,7 @@ Goes with notepad
   margin-bottom: 0em;
 }
 
-.rightPanel{
+.sidePanel{
   color: #555;
   font-size: 1.1em;
   font-family: 'Montserrat', sans-serif;
