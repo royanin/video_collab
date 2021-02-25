@@ -7,82 +7,6 @@ from .utils import record_room_create, read_room_create, parse_url, validate_new
 import uuid
 
 
-'''
-@main.route('/', methods=['GET', 'POST'])
-def index():
-
-    #Login form to enter a room.
-    form = LoginForm()
-    #db_file = current_app.config['db_file']
-
-    if form.validate_on_submit():
-        session['name'] = form.name.data
-        #session['room'] = form.room.data
-
-        #assign room here:
-        room = session.get('room', '')
-        if room == '':
-            u = uuid.uuid4()
-            room = u.hex
-            session['room'] = room
-        session['joint'] = "{}.{}".format(room, session['name'])
-        print('Hello {}, your room is {}'.format(session['name'], room))
-        return redirect(url_for('.chat', room=room))
-
-    elif request.method == 'GET':
-        form.name.data = session.get('name', '')
-        #room = session.get('room', '')
-        #form.room.data = session.get('room', '')
-
-    return render_template('index.html', form=form, ret_list=[])
-
-
-@main.route('/changename', methods=['POST'])
-def changeName():
-    data = request.get_json()
-    newName = data['name']
-    newName, msg_ = validate_newname(newName)
-    session['name'] = newName
-    room = session.get('room', '')
-    if room != '':
-        session['joint'] = "{}.{}".format(room, session['name'])
-
-    return json.dumps({'name':newName, 'msg':msg_})
-
-@main.route('/morechat', methods=['POST'])
-def getchat():
-    num_messages = 5
-    #print(request.json['data'])
-    data = request.get_json()
-    tstamp = None
-    try:
-        tstamp = float(data['tstamp'])
-        msg = "Showing {} previous messages".format(num_messages)
-    except Exception as e:
-        msg = "Can't load more messages..."
-
-    name = session.get('name', '')
-    room = session.get('room', '')
-
-    #Get messages from the database and send them as the ajax call response
-    if tstamp != None:
-        db_file = current_app.config['db_file']
-        conn = sqlite3.connect(db_file)
-
-        #get a list of num_messages recent chats:
-        ret_list = []
-        ret_list = read_chat(conn, room, limit_=num_messages, timestamp_= tstamp)
-        #print(ret_list)
-        return json.dumps(ret_list)
-        #emit('message', {'msg': username + ':' + message['msg']}, room=room)
-        #emit('message', {'who': username,'when':ts,
-        #                'msg':text_}, room=room)
-
-    else:
-        return(msg)
-
-'''
-
 @main.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -182,6 +106,27 @@ def chat(room):
         return render_template('room.html', room=room)
 
 
+@main.route('/editor/<room>',  methods=['GET'])
+def editor(room):
+
+    """Chat room. The user's name and room must be stored in
+    the session."""
+    print(session)
+
+    name = session.get('name', '')
+    joint = session.get('joint', '')
+    #Check if this roomId exists and if it's active
+    #To be implemented. For now assume it's OK:
+    session['room'] = room
+    print(session)
+    if name == '':
+        return render_template("chooseName.html")
+
+    elif joint != "{}.{}".format(room, name):
+        return render_template("chooseName.html")
+
+    else:
+        return render_template('editor.html', room=room)
 
 @main.route('/newvideourl', methods=['POST'])
 def getURL():

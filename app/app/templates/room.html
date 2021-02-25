@@ -27,51 +27,37 @@ Hi <em>{{ session.name }}!</em>
 <div class="container-fluid">
 <div class="flex">
     <div id="a">
+      <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
 
-        <div>
-          <div id="loadNewVideoButton" class="input-group input-group-sm mb-3">
-            <input type="text" id="videoURL" class="form-control" placeholder='e.g., https://www.youtube.com/watch?v=-Qr8QrMG3CQ'
-            aria-label="New video URL" aria-describedby="basic-addon2">
-            <div class="input-group-append">
-              <button class="btn btn-xs btn-outline-secondary" onclick="loadNewVideo()" type="button">LOAD VIDEO</button>
-            </div>
-          </div>
-          <div id="vidBox">
-            <div id="player" class="player"></div>
-          </div>
-            <div class="alert alert-secondary alert-dismissible fade show" role="alert">
-              <strong>How-to:</strong>
-              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-              <ul>
-                <li>Copy and share the room URL via email/chat to invite someone to this room.</li>
-                <li>Copy-paste a Youtube video URL in the box above, and hit <em>LOAD VIDEO</em>. It'll
-                  sync automatically for everyone as others join the room.</li>
-                <li>To the right is a shared scratchpad: you can take notes together and edit in realtime.
-                  <em>Remember to make a copy of your notes before leaving the room.</em></li>
-                <li> Groupchat messenger is at the bottom right corner</li>
-              </ul>
-            </div>
-          </div>
-          <div>{#<span>https://www.youtube.com/watch?v=Ll-lia-FEIY<br>
-            https://www.youtube.com/watch?v=XXo8KnfPCXM<br>
-            https://demo.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=401da229-c9a6-49e4-aeab-ab91015553f6
-          </span>#}</div>
-        <!--<button class="btn btn-sm btn-primary" id="jitsiStart" type="button">Start Video/Audio chat</button>
-        <div class="meet2" id="meet"></div>-->
-        <div class="converse-container">
-          <div id="conversejs"></div>
+        <div class="btn-group" role="group" aria-label="video chat button">
+          <button class="btn btn-sm btn-outline-secondary" id="jitsiStart" type="button">start Video chat</button>
         </div>
+
+        <div class="btn-group" role="group" aria-label="scratchpad button">
+          <button class="btn btn-sm btn-outline-secondary" id="editorStart" type="button">launch scratchpad</button>
+        </div>
+
+      </div>
+      <div class="meet2" id="meet"></div>
+
+      {% include "snippets/howto.html" %}
     </div>
 
 
     <div id="b">
-          <div id ="notepad2" class="notepad">
-                  <!-- Create the editor container -->
-                  <div id="editor">
-                  </div>
+      <div>
+        <div id="loadNewVideoButton" class="input-group input-group-sm mb-3">
+          <input type="text" id="videoURL" class="form-control" placeholder='e.g., https://www.youtube.com/watch?v=-Qr8QrMG3CQ'
+          aria-label="New video URL" aria-describedby="basic-addon2">
+          <div class="input-group-append">
+            <button class="btn btn-xs btn-outline-secondary" onclick="loadNewVideo()" type="button">load video</button>
           </div>
+        </div>
+        <div id="vidBox">
+          <div id="player" class="player"></div>
+        </div>
+
+        </div>
 
     </div>
 
@@ -79,7 +65,7 @@ Hi <em>{{ session.name }}!</em>
 </div>
 
 
-      <script type="text/javascript" charset="utf-8">
+<script type="text/javascript" charset="utf-8">
         document.getElementById("vidAlert").innerHTML = 'Welcome to View-Note-Chat';
         /*document.getElementById("ShareRoom").value = window.location.href;
         function copyRoomName(){
@@ -92,59 +78,13 @@ Hi <em>{{ session.name }}!</em>
 
         Split(['#a', '#b'], {
           direction: 'horizontal',
-          sizes: [60, 40],
+          sizes: [50, 50],
           minSize:[300,300],
         gutterSize: 8,
         cursor: 'col-resize',
       }
     )
 
-
-
-        window.Y = yjquill.Y;
-        window.WebsocketProvider = yjquill.WebsocketProvider;
-        window.QuillBinding = yjquill.QuillBinding;
-        window.Quill = yjquill.Quill;
-        window.QuillCursors = yjquill.QuillCursors;
-
-        Quill.register('modules/cursors', QuillCursors);
-
-        window.addEventListener('load', () => {
-          const ydoc = new Y.Doc()
-          const provider = new WebsocketProvider('wss://demos.yjs.dev', "{{ session.room }}", ydoc)
-          const ytext = ydoc.getText('quill')
-          //const editorContainer = document.createElement('div')
-          //editorContainer.setAttribute('id', 'editor')
-          //document.body.insertBefore(editorContainer, null)
-
-          const editor = new Quill('#editor', {
-            modules: {
-              cursors: true,
-              toolbar: [
-                [{ header: [1, 2, false] }],
-                ['bold', 'italic', 'underline'],
-                ['image', 'code-block']
-              ],
-              history: {
-                userOnly: true
-              }
-            },
-            placeholder: 'Make a copy of your notes before leaving the room.',
-            theme: 'snow' // or 'bubble'
-          })
-
-          const binding = new QuillBinding(ytext, editor, provider.awareness)
-
-
-
-          // Define user name and user name
-          // Check the quill-cursors package on how to change the way cursors are rendered
-          provider.awareness.setLocalStateField('user', {
-            name: '{{ session.name }}',
-            color: 'blue'
-          })
-
-        })
 
         //Check if other converse instances already exist:
         /*
@@ -209,14 +149,34 @@ Hi <em>{{ session.name }}!</em>
           }
         } */
 
+          //editor
+          var editorButton = document.querySelector('#editorStart');
+          editorButton.addEventListener('click', () => {
+            let params = `scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no,
+             width=500,height=620,left=500,top=100`;
+             //let newWin = window.open("about:blank", "editor", "width=500, height=620");
+             //newWin.document.write('<iframe src="/editor/{{ session.room }}" width="100%" height="100%"></iframe>');
+             open('/editor/{{ session.room }}', 'test', params);
+            //document.addEventListener('DOMContentLoaded', function() {
+            //           // your code here
+            //        }, false);
+             //setTimeout(function(){
+            //   launchEditor();
+             //}, 3000);
+          });
 
            //Jitsi
-          /*
+
            var button = document.querySelector('#jitsiStart');
            var container = document.querySelector('#meet');
            var api = null;
 
            button.addEventListener('click', () => {
+             //alert("jitisStart clicked");
+             //let params = `scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no,
+              //width=600,height=480,left=500,top=100`;
+             //window.open('/', 'test', params);
+
                var domain = "meet.jit.si";
                var options = {
                    "roomName": "{{ session.room }}",
@@ -225,10 +185,11 @@ Hi <em>{{ session.name }}!</em>
                    },
                    "parentNode": container,
                    "width": "100%",
-                   //"height": "100%",
+                   "height": "480px",
                };
                api = new JitsiMeetExternalAPI(domain, options);
-           }); */
+
+           });
 
 
                //create clientId
