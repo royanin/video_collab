@@ -1,6 +1,6 @@
 FROM python:3.8
 COPY ./app /app
-
+EXPOSE 5000
 
 ENV STATIC_URL /app/static
 ENV STATIC_PATH /var/www/app/static
