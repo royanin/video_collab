@@ -12,7 +12,6 @@ def index():
     return render_template('index.html')
 
 
-
 @main.route('/createroom', methods=['POST'])
 def createRoom():
     data = request.get_json()
