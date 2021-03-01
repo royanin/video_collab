@@ -2,7 +2,8 @@ import os
 from flask import Flask
 from flask_socketio import SocketIO
 
-socketio = SocketIO(cors_allowed_origins=["https://wesync.ojar-expt.com/", "http://localhost:5000"])
+socketio = SocketIO(cors_allowed_origins=["https://wesync.ojar-expt.com/","http://wesync.ojar-expt.com/"
+ "http://localhost:5000"])
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 def create_app(debug=False):
