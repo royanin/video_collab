@@ -292,7 +292,9 @@ Hi <em>{{ session.name }}!</em>
                 //SocketIO segment
                 var socket;
                 $(document).ready(function(){
-                    socket = io.connect('http://' + document.domain + ':' + location.port + '/chat', {
+                    //console.log(window.location.protocol);
+                    //socket = io.connect('http://' + document.domain + ':' + location.port + '/chat', {
+                    socket = io.connect(window.location.protocol  + '//' + document.domain + ':' + location.port + '/chat', {
                       'sync disconnect on unload': true }
                     );
                     socket.on('connect', function() {

@@ -2,8 +2,9 @@ import os
 from flask import Flask
 from flask_socketio import SocketIO
 
-socketio = SocketIO(cors_allowed_origins=["https://wesync.ojar-expt.com/","http://wesync.ojar-expt.com/"
- "http://localhost:5000"])
+#socketio = SocketIO(cors_allowed_origins=["https://wesync.ojar-expt.com/","http://wesync.ojar-expt.com/"
+# "http://localhost:5000"])
+socketio = SocketIO()
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 def create_app(debug=False):
@@ -17,5 +18,5 @@ def create_app(debug=False):
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
-    socketio.init_app(app, logger=True, engineio_logger=True)
+    socketio.init_app(app, logger=False, engineio_logger=False)
     return app
