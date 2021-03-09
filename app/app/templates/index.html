@@ -7,17 +7,15 @@
 {% endblock %}
 {% block content %}
   <div class="container-fluid">
-          <div  class="row">
-            {% include "side_panel_index.html" %}
-            <!--<div class="col-md-6 offset-md-3"> -->
-            <div class="col-md-6">
-            <div  class="p-5 m-5">
-              <p class="p-5 m-5"></p>
+          <div  class="row sidePanel">
+            <div class="col-md-6 offset-md-3 text-center">
+            <div  class="p-2 m-2">
+              <p class="p-3 m-3">{% include "snippets/side_panel_index.html" %}</p>
             <div id="createNewRoomButton" class="input-group input-group-sm mb-3">
               <input type="text" id="username" class="form-control" placeholder='Screen name'
               aria-label="New room" aria-describedby="basic-addon2">
               <div class="input-group-append">
-                <button class="btn btn-sm btn-outline-secondary" onclick="createRoom()" type="button">NEW ROOM</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="createRoom()" type="button">New Room</button>
               </div>
             </div>
             </div>

@@ -15,7 +15,8 @@ def joined(message):
     #time.sleep(0.5) #this ensures that the new client has time to render html
     join_room(room)
 
-    emit('status', {'msg': session.get('name') + ' joined the chat!'}, room=room,  broadcast=True, include_self=False)
+    emit('status', {'msg': session.get('name') + ' joined the room!'},
+                        room=room,  broadcast=True, include_self=False)
 
 '''
 @socketio.on('text', namespace='/chat')
@@ -101,4 +102,16 @@ def left(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     leave_room(room)
-    emit('status', {'msg': session.get('name') + ' has left the chat.'}, room=room)
+    emit('status', {'msg': session.get('name') + ' has left the room.'}, room=room)
+
+@socketio.on('launched_service', namespace='/chat')
+def service_launch(service_name):
+    ts = datetime.now(timezone.utc).timestamp()
+    room = session.get('room')
+    username = session.get('name')
+    emit('status', {'msg': username + ' has launched the '+service_name}, room=room)    
+
+@socketio.on('disconnect', namespace='/chat')
+def test_disconnect():
+    print('client disconnected')
+    emit('status', {'msg': session.get('name') + ' has left the room.'}, room=session.get('room'))

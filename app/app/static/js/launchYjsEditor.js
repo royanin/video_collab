@@ -11,6 +11,7 @@
             window.addEventListener('load', () => {
               const ydoc = new Y.Doc()
               const provider = new WebsocketProvider('wss://demos.yjs.dev', "{{ session.room }}", ydoc)
+              //const provider = new WebsocketProvider('wss://localhost:1234', "{{ session.room }}", ydoc)
               const ytext = ydoc.getText('quill')
               //const editorContainer = document.createElement('div')
               //editorContainer.setAttribute('id', 'editor')

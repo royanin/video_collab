@@ -7,66 +7,57 @@
 {% endblock %}
 {% block content %}
 <div class="container-fluid">
-  <div class="p-2 m-2 row">
-    <div class="col-md-3">
-      <em>View-Note-Chat</em>
+  <div class="p-1 m-1 row"></div>
+  <div class="row">
+  <div id='hamburger' class="col-md-1">
+    <div class="dropdown">
+    <button type="button" class="btn btn-outline-secondary dropdown-toggle"
+    id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <svg viewBox="0 0 100 50" width="40" height="40">
+      <rect y="10" width="100" height="12" rx="4" stroke="#777" stroke-width="5"></rect>
+      <rect y="30" width="100" height="12" rx="4" stroke="#777" stroke-width="5"></rect>
+      <rect y="50" width="100" height="12" rx="4" stroke="#777" stroke-width="5"></rect>
+    </svg>
+    </button>
+    {% include "snippets/menuoptions.html" %}
     </div>
-<div id='vidAlertBox' class="col-md-6 text-center">
-
-      <!--<div  class="alert alert-light" role="alert">-->
-        <small><em><span id='vidAlert'></span></em></small>
-        <!--<button class="btn btn-sm btn-outline-secondary" onclick="copyRoomName()" type="button">COPY ROOM URL</button>
-        <input type="text" id="ShareRoom">-->
-      <!--</div>-->
+  </div>
+  <div class="col-md-2"></div>
+  <div class="col-md-6">
+    <div id='vidAlertBox' class="p-2 text-center"><small><em><span id='vidAlert'></span></em></small></div>
+  </div>
+  <div class="col-md-2"></div>
+  <div id='howtoDiv' class="col-md-1 text-right">
+    <button type="button" class="btn btn-outline-secondary btn-lg" data-toggle="modal" data-target="#howToModal">?</button>
+  </div>
+  </div>
+  <div class="p-1 m-1 row"></div>
 </div>
-<div class="col-md-3 text-right">
-Hi <em>{{ session.name }}!</em>
-</div>
-</div>
-
 <div class="container-fluid">
 <div class="flex">
     <div id="a">
-      <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-
-        <div class="btn-group" role="group" aria-label="video chat button">
-          <button class="btn btn-sm btn-outline-secondary" id="jitsiStart" type="button">start chat</button>
-        </div>
-
-        <div class="btn-group" role="group" aria-label="scratchpad button">
-          <button class="btn btn-sm btn-outline-secondary" id="editorStart" type="button">launch scratchpad</button>
-        </div>
-
+      <div class="p-2 m-2" id="vidBox">
+        <div id="player" class="player"></div>
       </div>
-      <div class="meet2" id="meet"></div>
 
       {% include "snippets/howto.html" %}
     </div>
 
 
     <div id="b">
-      <div>
-        <div id="loadNewVideoButton" class="input-group input-group-sm mb-3">
-          <input type="text" id="videoURL" class="form-control" placeholder='e.g., https://www.youtube.com/watch?v=-Qr8QrMG3CQ'
-          aria-label="New video URL" aria-describedby="basic-addon2">
-          <div class="input-group-append">
-            <button class="btn btn-xs btn-outline-secondary" onclick="loadNewVideo()" type="button">load video</button>
-          </div>
-        </div>
-        <div id="vidBox">
-          <div id="player" class="player"></div>
-        </div>
-
-        </div>
-
+        <div class="meet2" id="meet">
     </div>
-
+  </div>
 </div>
 </div>
+<div class="container-fluid">
 
+</div>
 
 <script type="text/javascript" charset="utf-8">
-        document.getElementById("vidAlert").innerHTML = 'Welcome to View-Note-Chat';
+
+        document.getElementById("vidAlert").innerHTML = 'Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!<br>\
+        <small>Room logs will appear here</small>';
         /*document.getElementById("ShareRoom").value = window.location.href;
         function copyRoomName(){
           var copyText = window.location.href;
@@ -75,6 +66,11 @@ Hi <em>{{ session.name }}!</em>
           document.execCommand("copy");
           alert(copyText);
         }*/
+
+        $('.dropdown-menu input').click(function(e) {
+                e.stopPropagation(); //This will prevent the event from bubbling up and close the
+                //dropdown when you type/click on text boxes.
+            });
 
         Split(['#a', '#b'], {
           direction: 'horizontal',
@@ -99,7 +95,7 @@ Hi <em>{{ session.name }}!</em>
            videoElemBox.appendChild(newVideoElem);
          }*/
 
-         /*
+
          var converseRooms = converse.roomviews;
          console.log(converse);
 
@@ -123,7 +119,7 @@ Hi <em>{{ session.name }}!</em>
             locked_muc_domain: false,
             muc_show_logs_before_join: true,
             //debug: true
-        }); */
+        });
 
 
 
@@ -156,15 +152,8 @@ Hi <em>{{ session.name }}!</em>
           editorButton.addEventListener('click', () => {
             let params = `scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no,
              width=500,height=620,left=500,top=100`;
-             //let newWin = window.open("about:blank", "editor", "width=500, height=620");
-             //newWin.document.write('<iframe src="/editor/{{ session.room }}" width="100%" height="100%"></iframe>');
              open('/editor/{{ session.room }}', 'test', params);
-            //document.addEventListener('DOMContentLoaded', function() {
-            //           // your code here
-            //        }, false);
-             //setTimeout(function(){
-            //   launchEditor();
-             //}, 3000);
+             socket.emit('launched_service', 'scratchpad');
           });
 
            //Jitsi
@@ -174,10 +163,16 @@ Hi <em>{{ session.name }}!</em>
            var api = null;
 
            button.addEventListener('click', () => {
+             $('#jitsiStart').prop("disabled",true);
              //alert("jitisStart clicked");
              //let params = `scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no,
               //width=600,height=480,left=500,top=100`;
              //window.open('/', 'test', params);
+               //const newDiv = container.createElement("div");
+               $('#meet').append('<div id="jitsiDiv" class="alert alert-light alert-dismissible">\
+                 <button id="chat-dismiss" onclick="jitsiStartEnable()" type="button" class="close" \
+                 data-dismiss="alert" aria-label="Close">\
+                   <span aria-hidden="true">&times;</span></button></div>')
 
                var domain = "meet.jit.si";
                var options = {
@@ -185,14 +180,18 @@ Hi <em>{{ session.name }}!</em>
                    "userInfo": {
                      "displayName": "{{ session.name }}",
                    },
-                   "parentNode": container,
+                   "parentNode": jitsiDiv,
                    "width": "100%",
                    "height": "480px",
                };
                api = new JitsiMeetExternalAPI(domain, options);
+               socket.emit('launched_service', 'video chat');
 
            });
 
+           function jitsiStartEnable(){
+             $('#jitsiStart').prop("disabled",false);
+           }
 
                //create clientId
                 function getRandomInt() {
@@ -303,6 +302,7 @@ Hi <em>{{ session.name }}!</em>
 
                     socket.on('status', function(data) {
                         //something about loading videos:
+                        document.getElementById("vidAlert").innerHTML = data['msg'];
                         if (embedApi) {
                           var vidURL = embedApi.getVideoUrl();
 
@@ -335,14 +335,14 @@ Hi <em>{{ session.name }}!</em>
                          if (msg['pstate']!== pstate){
                              if (msg['pstate']===2){
                                  //document.getElementById("vidAlert").innerHTML = msg.who+' paused the video at '+timeEvent;
-                                 document.getElementById("vidAlert").innerHTML = 'Video paused at '+timeEvent;
+                                 //document.getElementById("vidAlert").innerHTML = timeEvent+' - Video paused';
                                  embedApi.pauseVideo();
                                  embedApi.seekTo(Number(msg['ptime']));
 
                              }
                              else if (msg['pstate']===1){
                                  //document.getElementById("vidAlert").innerHTML = msg.who+' started playing the video at '+timeEvent;
-                                 document.getElementById("vidAlert").innerHTML = 'Video playback resumed at '+timeEvent;
+                                 //document.getElementById("vidAlert").innerHTML = timeEvent+' - Video playback resumed';
                                  embedApi.seekTo(Number(msg['ptime']));
                                  embedApi.playVideo();
                              }
@@ -350,7 +350,7 @@ Hi <em>{{ session.name }}!</em>
                          //if (msg['pspeed']!== embedApi.getPlaybackRate()){
                          if (msg['what']=== "speed"){
                                  //document.getElementById("vidAlert").innerHTML = msg.who+' changed the playback speed to '+msg.pspeed+'x at '+timeEvent;
-                                 document.getElementById("vidAlert").innerHTML = 'Video playback speed changed to '+msg.pspeed+'x at '+timeEvent;
+                                 //document.getElementById("vidAlert").innerHTML = timeEvent+' - Video playback speed changed to '+msg.pspeed+'x';
                                  embedApi.setPlaybackRate(msg['pspeed']);
                                  embedApi.seekTo(Number(msg['ptime']));
 
@@ -412,12 +412,14 @@ Hi <em>{{ session.name }}!</em>
                    console.log('in onStateUpdate');
                    console.log(embedApi);
                    console.log(currentState);
+                   currentStateMessage(currentState);
                    socket.emit('state update', currentState);
                }
                function onPlaybackRateChange()
                {
                    console.log('in onPlaybackRateChange');
                    var currentState = getCompleteState();
+                   currentStateMessage(currentState);
                    socket.emit('state update speed', currentState);
                }
 
@@ -437,6 +439,14 @@ Hi <em>{{ session.name }}!</em>
                  'pstate': pstate,
                  'pspeed': embedApi.getPlaybackRate(),
                  'ptime': (embedApi.getCurrentTime()).toFixed(2)};
+               }
+
+               function currentStateMessage(currentState){
+                 var stateString = (currentState['pstate']===1)? 'playing from ' : 'paused/stopped at ' ;
+                 var videoTime = Math.floor(currentState['ptime']/60)+'min. '+Math.round(currentState['ptime']%60)+'sec. ';
+                 document.getElementById("vidAlert").innerHTML = 'Video '+stateString+videoTime+'\
+                  at '+currentState['pspeed']+'x speed';
+
                }
 
                function leave_room() {
@@ -461,6 +471,7 @@ Hi <em>{{ session.name }}!</em>
                    success: function(response){
                      if(response['type']!='' || response['key']!=''){
                        videoLoader(response['type'], response['key']);
+                       document.getElementById("vidAlert").innerHTML = 'You loaded a new video in the room';
                        socket.emit('video update', response); //broadcast the new video to everyone
                      }
                      else {
