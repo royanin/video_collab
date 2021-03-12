@@ -18,7 +18,7 @@ def joined(message):
     emit('status', {'msg': session.get('name') + ' joined the room!'},
                         room=room,  broadcast=True, include_self=False)
 
-'''
+
 @socketio.on('text', namespace='/chat')
 def text(message):
     """Sent by a client when the user entered a new message.
@@ -26,17 +26,17 @@ def text(message):
     room = session.get('room')
     username = session.get('name')
     ts = datetime.now(timezone.utc).timestamp()
-    db_file = current_app.config['db_file']
-    conn = sqlite3.connect(db_file)
+    #db_file = current_app.config['db_file']
+    #conn = sqlite3.connect(db_file)
     text_ = message['msg']
     print(ts, room, username, text_)
 
-    write_chat(conn, ts, room, username, text_)
+    #write_chat(conn, ts, room, username, text_)
     #emit('message', {'msg': username + ':' + message['msg']}, room=room)
     emit('message', {'who': username,'when':ts,
                     'msg':text_}, room=room)
 
-
+'''
 @socketio.on('value changed', namespace='/chat')
 def value_changed(message):
     room = session.get('room')
@@ -102,16 +102,16 @@ def left(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     leave_room(room)
-    emit('status', {'msg': session.get('name') + ' has left the room.'}, room=room)
+    emit('update message', {'msg': session.get('name') + ' has left the room.'}, room=room)
 
 @socketio.on('launched_service', namespace='/chat')
 def service_launch(service_name):
     ts = datetime.now(timezone.utc).timestamp()
     room = session.get('room')
     username = session.get('name')
-    emit('status', {'msg': username + ' has launched the '+service_name}, room=room)    
+    emit('update message', {'msg': username + ' has launched the '+service_name}, room=room)
 
 @socketio.on('disconnect', namespace='/chat')
 def test_disconnect():
     print('client disconnected')
-    emit('status', {'msg': session.get('name') + ' has left the room.'}, room=session.get('room'))
+    emit('update message', {'msg': session.get('name') + ' has left the room.'}, room=session.get('room'))

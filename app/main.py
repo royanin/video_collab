@@ -6,7 +6,7 @@ from app import create_app, socketio
 #This is totally hacky -- need to change once more persistence is required.
 #if os.isfile("data/i")
 
-app = create_app(debug=False)
+app = create_app(debug=True)
 
 if __name__ == '__main__':
     socketio.run(app, host="0.0.0.0", port=5000)

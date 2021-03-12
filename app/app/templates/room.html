@@ -22,11 +22,12 @@
     {% include "snippets/menuoptions.html" %}
     </div>
   </div>
-  <div class="col-md-2"></div>
+  <div class="col-md-2">
+</div>
   <div class="col-md-6">
     <div id='vidAlertBox' class="p-2 text-center"><small><em><span id='vidAlert'></span></em></small></div>
   </div>
-  <div class="col-md-2"></div>
+  <div class="col-md-2">{#<a href="#" onclick="leave_room();">Leave this room</a>#}</div>
   <div id='howtoDiv' class="col-md-1 text-right">
     <button type="button" class="btn btn-outline-secondary btn-lg" data-toggle="modal" data-target="#howToModal">?</button>
   </div>
@@ -46,12 +47,39 @@
 
     <div id="b">
         <div class="meet2" id="meet">
-    </div>
+        </div>
   </div>
 </div>
 </div>
-<div class="container-fluid">
+<div id="minimizedChatClientDiv" class="minChatClient">
+  <button id="minimizedChatClientBtn" onclick="maximizeChatClient()" type="button"
+  class="btn btn-lg btn-secondary">chat</button>
+</div>
+<div id="emojiContainer"></div>
+<div id="chatClient" class="chatClient">
+  <div  id="chatHead" class="chatHead">
+    <div class="text-right">
+      <div class="btn-group" role="group" aria-label="First group">
+        <!--<button id="popoutChatclientBtn" onclick="popClient()" type="button" class="btn btn-sm btn-light">p</button>-->
+        <button id="minimizeChatclientBtn" onclick="minimizeClient()" type="button" class="btn btn-sm btn-light">
+          <strong>&#8212;</strong>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div  id="chatMessages" class="chatMessages" >
+    <br>
+    <!--<button id="loadchat" onclick="getChat()" class="btn btn-outline-Dark">Load previous messages</button>
+  <button id="loadchatButton" onclick="getMoreChat()">Load previous messages</button>-->
+  </div>
+  <div id="chatInput" class="chatInput">
 
+    <div id="chatTextEmoji" class="input-group input-group-sm mb-3">
+      <button id="emojiToggle" class="btn btn-sm btn-light" type="button"> 😀</button>
+      <input type="text" id="text" contenteditable="true"  class="form-control" placeholder='Send a message'
+      aria-label="Chat client text input area" aria-describedby="basic-addon3">
+    </div>
+  </div>
 </div>
 
 <script type="text/javascript" charset="utf-8">
@@ -95,7 +123,7 @@
            videoElemBox.appendChild(newVideoElem);
          }*/
 
-
+         /*
          var converseRooms = converse.roomviews;
          console.log(converse);
 
@@ -119,7 +147,7 @@
             locked_muc_domain: false,
             muc_show_logs_before_join: true,
             //debug: true
-        });
+        }); */
 
 
 
@@ -164,6 +192,7 @@
 
            button.addEventListener('click', () => {
              $('#jitsiStart').prop("disabled",true);
+             $( ".gutter.gutter-horizontal" ).show();
              //alert("jitisStart clicked");
              //let params = `scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no,
               //width=600,height=480,left=500,top=100`;
@@ -222,6 +251,7 @@
                 var videoElem = document.getElementById("player");
                 if (videoElem){
                    videoElem.remove();
+                   $( ".gutter.gutter-horizontal" ).show();
                    var videoElemBox = document.getElementById("vidBox");
                    var newVideoElem = document.createElement("div");
                    newVideoElem.className="player";
@@ -316,6 +346,26 @@
                         }
 
                     });
+
+                    socket.on('update message', function(data) {
+                      document.getElementById("vidAlert").innerHTML = data['msg'];
+                    });
+
+                    socket.on('message', function(data) {
+                        loadChat(data, "append");
+
+                      });
+                      $('#text').keypress(function(e) {
+                          var code = e.keyCode || e.which;
+                          if (code == 13) {
+                              text = $('#text').val()+ '\n';
+                              if (text!='\n'){
+                                //text = sanitizeText(text);
+                                $('#text').val('');
+                                socket.emit('text', {msg: text});
+                            }
+                          }
+                      });
 
 
                     socket.on('update state', function(msg) {
@@ -486,7 +536,131 @@
                }
 
 
+            //Function to load chat and format it based on the clientname:
+            function loadChat(data, add_pos){
+                //data is a single message in the json format containing who, when and msg as keys
+                //add_pos could be "append" or "prepend"
+                var options = { month: 'short', day: 'numeric' };
+                var dateGiven = new Date(1000*data.when).toLocaleDateString(options);
+                var dateNow = new Date().toLocaleDateString(options);
+                var timeNow = new Date(1000*data.when).toLocaleTimeString();
+                if (dateGiven!==dateNow){
+                    timeNow = dateGiven+', '+timeNow;
+                }
 
+                var user = {{ session.name|tojson }};
+
+                if (data.who==user){
+                  //$('#chat').append(posting_format)
+                  var who = "";
+                  /*var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
+                  <div class="container"><div class="row">\
+                    <div class="col-11"><div class="msgOut">'+data.msg+'</div>\
+                    <div class="msgOut whoTimeOut">'+who+timeNow+'</div>\
+                    <div class="col-1"></div></div></div></div>';*/
+                    var posting_format = '<div class="row">\
+                      <div class="col-11"><div class="msgOut">'+data.msg+'</div>\
+                      <div class="msgOut whoTimeOut">'+who+timeNow+'</div>\
+                      <div class="col-1"></div></div></div>'
+
+                }
+                else {
+                  var who=data.who+'  |  ';
+                  var userNn = who.substring(0, 2);
+                  //$('#chat').append(posting_format)
+                  /*var posting_format = '<span class="tstamp" style="visibility:hidden">'+data.when+'</span>\
+                  <div class="container"><div class="row no-gutters">\
+                    <div class="col-2 text-right"><span class="iconIn">'+userNn+'</span></div>\
+                    <div class="col-10"><div class="msgIn">'+data.msg+'</div>\
+                    <div class="msgIn whoTimeOut">'+who+timeNow+'</div></div></div></div>';*/
+                    var posting_format = '<div class="row no-gutters">\
+                      <div class="col-2 text-right"><span class="iconIn">'+userNn+'</span></div>\
+                      <div class="col-10"><div class="msgIn">'+data.msg+'</div>\
+                      <div class="msgIn whoTimeOut">'+who+timeNow+'</div></div></div>';
+                }
+
+                if (add_pos==="append"){
+                  $('#chatMessages').append(posting_format);
+                  $('#chatMessages').scrollTop($('#chatMessages').get(0).scrollHeight);
+                }
+                else {
+                  $('#chatMessages').prepend(posting_format);
+                }
+                /* Decide whether to append or prepend */
+
+              }
+
+              function popClient(){
+                var divText = document.getElementById("chatClient").outerHTML;
+                var myWindow = window.open('','','width=300,height=350');
+                var doc = myWindow.document;
+                doc.open();
+                doc.write(divText);
+                doc.close();
+              }
+
+              function minimizeClient(){
+                //alert('Client to be minimized');
+                $('#chatClient').hide();
+                $('#minimizedChatClientDiv').show();
+              }
+
+              function maximizeChatClient(){
+                $('#minimizedChatClientDiv').hide();
+                $('#chatClient').show();
+              }
+
+              //emojis!
+              new EmojiPanel({
+                  container: '#emojiContainer',
+                  trigger: '#emojiToggle',
+                  //editable: '#emojiDest',
+                  editable: '#text',
+                  placement: 'top',
+                  json_url: '/static/emojis.json'
+              });
+              // When the user clicks anywhere outside of the modal, close it
+              /*var emojipane = document.getElementById('emojiContainer');
+              window.onclick = function(event) {
+                if (event.target != emojipane) {
+                  //emojipane.style.display = "none";
+                  $('#emojiToggle').click();
+                }
+              }*/
+              /*
+                var ul = document.getElementsByTagName('ul')[0];
+                var total = ul.getElementsByTagName('li').length;
+                var elapsed = +new Date;
+                twemoji.parse(ul, {size: 36 });
+                elapsed = (+new Date) - elapsed;
+                document.body.insertBefore(
+                  document.createTextNode(total + ' emoji parsed in ' + elapsed + 'ms'),
+                  document.body.firstChild
+                );
+                (function (img, metaKey, i) {
+                  function copyToClipboard(e) {
+                    prompt('Copy to clipboard via ' + metaKey + '+C and Enter', this.alt);
+                  }
+                  for (i = 0; i < img.length; img[i++].onclick = copyToClipboard) {}
+                }(
+                  document.getElementsByTagName('img'),
+                  /\b(?:Mac |i)OS\b/i.test(navigator.userAgent) ? 'Command' : 'Ctrl'
+                ));
+                {#<ul class="emoji-list">
+                  <Li title = "smiley" >&#x1F601; </li>
+                  <Li title = "crying" >&#x1F602; </li>
+                  <Li title = "emotion 1" >&#x1F603; </li>
+                  <Li title = "emotion 2" >&#x1F604; </li>
+                  <Li title = "emotion 3" >&#x1F605; </li>
+                  <Li title = "emotion 4" >&#x1F606; </li>
+                  <Li title = "emotion 5" >&#x1F607; </li>
+                  <Li title = "emotion 6" >&#x1F608; </li>
+                  <Li title = "emotion 7" >&#x1F609; </li>
+                  <Li title = "emoticons 8" >&#x1F60A; </li>
+                  <Li title = "emojis 9" >&#x1F60B; </li>
+                  <Li title = "emotion 10" >&#x1F60C; </li>
+                 </ul> #}
+                */
            </script>
 
 
