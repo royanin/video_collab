@@ -5,7 +5,7 @@ from flask_socketio import SocketIO
 socketio = SocketIO()
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-def create_app(debug=True):
+def create_app(debug=False):
     """Create an application."""
     app = Flask(__name__)
     app.debug = debug
@@ -16,5 +16,5 @@ def create_app(debug=True):
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
-    socketio.init_app(app, logger=True, engineio_logger=True)
+    socketio.init_app(app, logger=False, engineio_logger=False)
     return app
