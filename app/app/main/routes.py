@@ -1,10 +1,10 @@
 from flask import session, redirect, url_for, render_template, request, current_app
 from . import main
 from .forms import NameForm
-#from .utils import read_chat, write_chat
 import sqlite3, json
 from .utils import record_room_create, read_room_create, parse_url, validate_newname, validate_newroom
 import uuid
+from ..run_mode import env_var
 
 
 @main.route('/', methods=['GET','POST'])
@@ -18,7 +18,7 @@ def index():
         session['room'] = room
         record_room_create(room)
         session['joint'] = "{}.{}".format(room, name)
-        return redirect(url_for('main.chat', room=room))
+        return redirect(url_for('main.chat', room=room, _external = True, _scheme=env_var['http_scheme']))
     elif request.method=='POST' and not(form.validate_on_submit()):
         msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
         return render_template("index.html", form=form, msg=msg)
