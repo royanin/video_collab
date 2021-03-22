@@ -1,4 +1,5 @@
 {% extends "html_header.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 {% block meta %}
 {% endblock %}
 {% block title %}Welcome to VClab!{% endblock %}
@@ -11,51 +12,14 @@
             <div class="col-md-6 offset-md-3 text-center">
             <div  class="p-2 m-2">
               <p class="p-3 m-3">{% include "snippets/side_panel_index.html" %}</p>
-            <div id="createNewRoomButton" class="input-group input-group-sm mb-3">
-              <input type="text" id="username" class="form-control" placeholder='Screen name'
-              aria-label="New room" aria-describedby="basic-addon2">
-              <div class="input-group-append">
-                <button class="btn btn-sm btn-outline-primary" onclick="createRoom()" type="button">New Room</button>
-              </div>
-            </div>
+
+            <div>{{ wtf.quick_form(form) }}</div>
+            <br>
+            <p><small>{{ msg }}</small></p>
+
             </div>
             </div>
             </div>
     </div>
 
-<script  type="text/javascript" charset="utf-8">
-
-  //Function to create a new room:
-  function createRoom(){
-    username = $('#username').val();
-    if (username !== ''){
-      $.ajax({
-        url: "{{ url_for('main.createRoom') }}",
-        data: JSON.stringify({'name': username}),
-        type: 'POST',
-        contentType: "application/json",
-        dataType: 'json',
-        success: function(response){
-          //$("#showName").load(" #showName");
-          //document.getElementById("showName").innerHTML = 'Hello <strong>'+response['name']+'</strong>!<br>';
-          //document.getElementById("notif").innerHTML = response['msg'];
-          if (response['msg']==="Success!"){
-            window.location = response['url'];
-          }
-          /*else {
-            alert({{ session['msg'] }});
-          }*/
-
-        },
-        error: function(error){
-            document.getElementById("notif").innerHTML = "Something went wrong. Please try again!";
-          }
-        });
-    }
-
-  }
-
-
-
-</script>
 {% endblock %}

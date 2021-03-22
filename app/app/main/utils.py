@@ -3,6 +3,8 @@ from datetime import datetime,timezone
 import random, string
 from urllib.parse import urlparse, parse_qs
 from flask import current_app
+from .models import db, Room
+
 '''
 def write_chat(conn, ts, room_id, username, text):
     c = conn.cursor()
@@ -44,37 +46,19 @@ def read_chat(conn, room_id, limit_=25, timestamp_=datetime.now(timezone.utc).ti
 
 def record_room_create(room_id):
     ts = datetime.now(timezone.utc).timestamp()
-    db_file = current_app.config['db_file']
-    conn = sqlite3.connect(db_file)
-    c = conn.cursor()
-    sql_ = """INSERT INTO roomCreate (timestamp, room_id)
-     VALUES (?,?)"""
-    print('in record_room_create',sql_)
-    c.execute(sql_, (ts, room_id))
-    conn.commit()
-    c.close()
-
+    new_room = Room(timestamp=ts, room_id=room_id)
+    print(new_room)
+    db.session.add(new_room)
+    db.session.commit()
     return ()
 
 def read_room_create(room_id, time_window = 600):
-    ts = datetime.now(timezone.utc).timestamp()
-    db_file = current_app.config['db_file']
-    print('room:', room_id)
-    conn = sqlite3.connect(db_file)
-    c = conn.cursor()
-    #get chats for a room
-    #sql_ = """SELECT * FROM roomCreate WHERE room_id = '{}' and timestamp >={} LIMIT 1""".format(room_id, timestamp_-time_window)
-    sql_ = """SELECT * FROM roomCreate WHERE room_id = '{}' LIMIT 5""".format(room_id) #no check on timestamp
-    #sql_ = """SELECT * FROM roomCreate LIMIT 1"""
-    print(sql_)
-    c.execute(sql_)
-    ret_list = []
-    ret_list = c.fetchall()
-    print(ret_list)
-    if len(ret_list)>0:
+    ret_list = Room.query.filter_by(room_id=room_id).first()
+    if ret_list != None:
         return 'room_exists'
     else:
         return 'room_notfound'
+
 
 def parse_url(url):
     """Returns Video_ID extracting from the given url of Youtube

@@ -1,10 +1,12 @@
-from flask import session, current_app
+from flask import session, current_app, request
 from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from datetime import datetime,timezone
 import sqlite3
 from .utils import record_room_create, read_room_create, parse_url
 import time
+from .models import db, Room, CurrentUser
+
 
 
 @socketio.on('joined', namespace='/chat')
@@ -29,7 +31,7 @@ def text(message):
     #db_file = current_app.config['db_file']
     #conn = sqlite3.connect(db_file)
     text_ = message['msg']
-    print(ts, room, username, text_)
+    #print(ts, room, username, text_)
 
     #write_chat(conn, ts, room, username, text_)
     #emit('message', {'msg': username + ':' + message['msg']}, room=room)
@@ -40,7 +42,7 @@ def text(message):
 @socketio.on('value changed', namespace='/chat')
 def value_changed(message):
     room = session.get('room')
-    print(message)
+    #print(message)
     #print(session)
     values[message['who']] = message['data']
     emit('update value', message, room=room)
@@ -54,7 +56,7 @@ def playpause(message):
     message['who'] = username
     message['what'] = 'playpause'
     message['when'] = ts
-    print(message)
+    #print(message)
     emit('update state', message, room=room, broadcast=True, include_self=False)
 
 @socketio.on('state update speed', namespace='/chat')
@@ -65,7 +67,7 @@ def speedchange(message):
     message['who'] = username
     message['what'] = 'speed'
     message['when'] = ts
-    print(message)
+    #print(message)
     emit('update state', message, room=room, broadcast=True, include_self=False)
 
 #'video update'
@@ -78,7 +80,7 @@ def updateVideo(response):
     response['who'] = username
     response['what'] = 'updated video'
     response['when'] = ts
-    print(response)
+    #print(response)
     emit('video updated', response, room=room, broadcast=True, include_self=False)
 
 #'video sync'
@@ -91,7 +93,7 @@ def syncing_video(stateNow):
     stateNow['vtype'] = url_type
     stateNow['vkey'] = url_key
     #time.sleep(0.1) #this ensures that the new client has time to render html
-    print('stateNow',stateNow)
+    #print('stateNow',stateNow)
     emit('video synced', stateNow, room=room, broadcast=True, include_self=False)
 
 
@@ -102,7 +104,9 @@ def left(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     leave_room(room)
-    emit('update message', {'msg': session.get('name') + ' has left the room.'}, room=room)
+    #ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
+    #emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room)
+    emit('update message', {'msg': session.get('name') + ' has left the room...'}, room=room)
 
 @socketio.on('launched_service', namespace='/chat')
 def service_launch(service_name):
@@ -111,7 +115,31 @@ def service_launch(service_name):
     username = session.get('name')
     emit('update message', {'msg': username + ' has launched the '+service_name}, room=room)
 
+@socketio.on('connect', namespace='/chat')
+def test_connect():
+    #print('Connect -- sid:',request.sid)
+    #print(session)
+    #update current user:
+    print('in events: session:', session)
+    current_user = CurrentUser(room_id=session.get('room'), sid=request.sid, screenName=session.get('name'))
+    #current_user = CurrentUser(room_id=session.get('room'), sid=request.sid)
+    db.session.add(current_user)
+    db.session.commit()
+    room_id = session.get('room')
+    print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count())
+    ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
+    print('name:', session.get('name'), '\nulist',ulist)
+    emit('update message', {'msg': session.get('name') + ' has joined the room','ulist':ulist}, room=room_id)
+
 @socketio.on('disconnect', namespace='/chat')
 def test_disconnect():
-    print('client disconnected')
-    emit('update message', {'msg': session.get('name') + ' has left the room.'}, room=session.get('room'))
+    #print('client disconnected')
+    #print('Disonnect -- sid:',request.sid)
+    #print(session)
+    CurrentUser.query.filter_by(sid=request.sid).delete()
+    db.session.commit()
+    room_id = session.get('room')
+    print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count(),'\nroom:',room_id)
+    ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
+    #print('users_list:', ret_list)
+    emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room_id)

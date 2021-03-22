@@ -42,6 +42,10 @@
       </div>
 
       {% include "snippets/howto.html" %}
+      <div>
+        <!--<h5>Guests in the room:</h5>
+        <p id="roomGuests"></p>-->
+      </div>
     </div>
 
 
@@ -94,6 +98,7 @@
           document.execCommand("copy");
           alert(copyText);
         }*/
+        console.log('name/room/joint: {{session.name}}, {{session.room}}, {{session.joint}}');
 
         $('.dropdown-menu input').click(function(e) {
                 e.stopPropagation(); //This will prevent the event from bubbling up and close the
@@ -102,8 +107,9 @@
 
         Split(['#a', '#b'], {
           direction: 'horizontal',
-          sizes: [50, 50],
-          minSize:[300,300],
+          sizes: [70, 30],
+          minSize:[300,100],
+          maxSize:[800,300],
         gutterSize: 8,
         cursor: 'col-resize',
       }
@@ -327,11 +333,18 @@
                       'sync disconnect on unload': true }
                     );
                     socket.on('connect', function() {
+                        console.log(socket.id);
+                        console.log(socket.io.engine.id);
                         socket.emit('joined', {});
                     });
 
                     socket.on('status', function(data) {
                         //something about loading videos:
+                        if (typeof data['ulist']!="undefined"){
+                            console.log(data['ulist']);
+                            $("#roomGuests").html("<span>"+data['ulist']+"</span>");
+
+                        }
                         document.getElementById("vidAlert").innerHTML = data['msg'];
                         if (embedApi) {
                           var vidURL = embedApi.getVideoUrl();
@@ -349,6 +362,10 @@
 
                     socket.on('update message', function(data) {
                       document.getElementById("vidAlert").innerHTML = data['msg'];
+                      if (typeof data['ulist']!="undefined"){
+                          $("#roomGuests").html("<span>"+data['ulist']+"</span>");
+
+                      }
                     });
 
                     socket.on('message', function(data) {
@@ -431,7 +448,6 @@
 
                 //submit a post request on an action:
                 //console.log($('#chat').scrollTop($('#chat')[0].scrollHeight));
-
 
 
                  //The API will call this function when the iframe is ready
