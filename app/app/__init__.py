@@ -17,6 +17,7 @@ def create_app(debug=env_var['debug_opt']):
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, '../data/app_data.sqlite')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config.update(SESSION_COOKIE_SAMESITE="None", SESSION_COOKIE_SECURE=True)
+    app.config.update(dict(PREFERRED_URL_SCHEME = 'https'))
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
