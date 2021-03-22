@@ -38,29 +38,23 @@ def chat(room):
     #To be implemented. For now assume it's OK:
     joint = session.get('joint', '')
     session['room'] = room
-    print('1. session:',session)
     if request.method=='POST' and form.validate_on_submit():
         session['name'] = form.name.data
         if validate_newroom(room) is True:
-            print('2. session:',session)
             session['joint'] = "{}.{}".format(room, session['name'])
             return render_template('room.html', room=room)
         else:
             msg = "Are you sure this is the correct room link? This room doesn't exist or not accessible."
-            print('3. session:',session)
             return render_template("chooseName.html", form=form, msg=msg)
     elif request.method=='POST' and not(form.validate_on_submit()):
         msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
-        print('4. session:',session)
         return render_template("chooseName.html", form=form, msg=msg)
     elif request.method == 'GET':
         name = session.get('name', '')
         if name == "" or joint != "{}.{}".format(room, name) or validate_newroom(room) is False:
-            print('5. session:',session)
             return render_template("chooseName.html", form=form, msg="Entering room {}".format(room))
 
         else:
-            print('6. session:',session)
             return render_template('room.html', room=room)
 
 

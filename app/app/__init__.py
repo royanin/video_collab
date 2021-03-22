@@ -3,7 +3,7 @@ from .run_mode import env_var
 from flask import Flask
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
-from flask_bootstrap import Bootstrap
+#from flask_bootstrap import Bootstrap
 
 
 socketio = SocketIO()
@@ -25,7 +25,7 @@ def create_app(debug=env_var['debug_opt']):
     from .main.models import db, CurrentUser
     db = SQLAlchemy(app)
     db.init_app(app)
-    Bootstrap(app)
+    #Bootstrap(app)
 
     #If the CurrentUser table already exists, drop it and recreate it:
     CurrentUser.__table__.drop(db.engine)
