@@ -5,8 +5,14 @@ from wtforms.validators import Required
 
 
 #class NameForm(Form):
-class NameForm(FlaskForm):
-    """Accepts a nickname and a room."""
+class NewMeetingForm(FlaskForm):
+    """Accepts a screenname."""
     name = StringField('', validators=[Required()],render_kw={"placeholder": "Screen name"})
     #room = StringField('Room', validators=[Required()])
+    submit = SubmitField('New Meeting')
+
+class JoinMeetingForm(FlaskForm):
+    """Accepts a room url."""
+    name_join_room = StringField('', validators=[Required()],render_kw={"placeholder": "Screen name"})
+    url = StringField('', validators=[Required()],render_kw={"placeholder": "Room url"})
     submit = SubmitField('Join Room')

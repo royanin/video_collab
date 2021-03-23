@@ -105,6 +105,11 @@ def parse_url(url):
     except Exception as e:
         return None, None
 
+def get_room_id_from_submitted_url(room_url):
+    if room_url[-1]=='/':
+        room_url.rstrip('/')
+    room_id = room_url.split("/")[-1]
+    return room_id
 
 def validate_newname(name):
     '''

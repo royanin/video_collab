@@ -1,15 +1,23 @@
 from flask import session, redirect, url_for, render_template, request, current_app
 from . import main
-from .forms import NameForm
+from .forms import NewMeetingForm, JoinMeetingForm
 import sqlite3, json
-from .utils import record_room_create, read_room_create, parse_url, validate_newname, validate_newroom
+from .utils import record_room_create, read_room_create, parse_url, validate_newname,\
+validate_newroom, get_room_id_from_submitted_url
 import uuid
 from ..run_mode import env_var
 
 
-@main.route('/', methods=['GET','POST'])
+@main.route('/')
 def index():
-    form = NameForm(request.form, meta={'csrf': False})
+    form = NewMeetingForm(request.form, meta={'csrf': False})
+    form2 = JoinMeetingForm(request.form, meta={'csrf': False})
+    return render_template('index.html', form=form, form2=form2, msg='')
+
+@main.route('/new_meeting', methods=['POST'])
+def new_meeting():
+    form = NewMeetingForm(request.form, meta={'csrf': False})
+    form2 = JoinMeetingForm(request.form, meta={'csrf': False})
     if form.validate_on_submit():
         name = form.name.data
         session['name'] = name
@@ -19,12 +27,35 @@ def index():
         record_room_create(room)
         session['joint'] = "{}.{}".format(room, name)
         return redirect(url_for('main.chat', room=room, _external = True, _scheme=env_var['http_scheme']))
-    elif request.method=='POST' and not(form.validate_on_submit()):
+    else:
         msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
-        return render_template("index.html", form=form, msg=msg)
+        return render_template("index.html", form=form,  form2=form2, msg=msg)
 
-    elif request.method == 'GET':
-        return render_template('index.html', form=form, msg='')
+
+@main.route('/join_meeting', methods=['POST'])
+def join_meeting():
+    form = NewMeetingForm(request.form, meta={'csrf': False})
+    form2 = JoinMeetingForm(request.form, meta={'csrf': False})
+
+    if form2.validate_on_submit():
+        name = form2.name_join_room.data
+        session['name'] = name
+        room_url = form2.url.data
+        #just extract the room id:
+        room_id = get_room_id_from_submitted_url(room_url)
+        session['room'] = room_id
+        if validate_newroom(room_id) is True:
+            session['joint'] = "{}.{}".format(room_id, name)
+            return redirect(url_for('main.chat', room=room_id, _external = True, _scheme=env_var['http_scheme']))
+        else:
+            msg = "The room link is not valid. Try again!"
+            #return redirect(url_for('main.index'))
+            return render_template("index.html", form=form,  form2=form2, msg=msg)
+
+    else:
+        msg = "The room/name is not valid. Try again!"
+        return redirect(url_for('main.index'))
+        return render_template("index.html", form=form,  form2=form2, msg=msg)
 
 
 
@@ -34,7 +65,7 @@ def chat(room):
     """Chat room. The user's name and room must be stored in
     the session."""
     room_url = request.url
-    form = NameForm(request.form, meta={'csrf': False})
+    form = NewMeetingForm(request.form, meta={'csrf': False})
     #Check if this roomId exists and if it's active
     #To be implemented. For now assume it's OK:
     joint = session.get('joint', '')
