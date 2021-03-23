@@ -33,6 +33,7 @@ def chat(room):
 
     """Chat room. The user's name and room must be stored in
     the session."""
+    room_url = request.url
     form = NameForm(request.form, meta={'csrf': False})
     #Check if this roomId exists and if it's active
     #To be implemented. For now assume it's OK:
@@ -42,7 +43,7 @@ def chat(room):
         session['name'] = form.name.data
         if validate_newroom(room) is True:
             session['joint'] = "{}.{}".format(room, session['name'])
-            return render_template('room.html', room=room)
+            return render_template('room.html', room=room, room_url=room_url)
         else:
             msg = "Are you sure this is the correct room link? This room doesn't exist or not accessible."
             return render_template("chooseName.html", form=form, msg=msg)
@@ -55,7 +56,7 @@ def chat(room):
             return render_template("chooseName.html", form=form, msg="Entering room {}".format(room))
 
         else:
-            return render_template('room.html', room=room)
+            return render_template('room.html', room=room, room_url=room_url)
 
 
 @main.route('/editor/<room>',  methods=['GET'])

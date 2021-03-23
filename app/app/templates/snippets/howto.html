@@ -9,13 +9,16 @@
       </div>
       <div class="modal-body">
         <div class="p-1 m-1">
-        <p><strong> Share room link:</strong> Text/email the room URL from the browser address bar</p>
-        <p><strong> Launch chat:</strong> Turn on the chat (video/audio/text) so everyone present in the
-          room can communicate</p>
-        <p><strong> Load video:</strong> Decide which video to watch, and then one of you can take the lead to
-          load a video from Youtube by its URL. </p>
-          <p><strong> Take notes:</strong> Launch the shared scratchpad for realtime note-taking. Save
-          it before you leave the room!</p>
+        <p> Invite others to this room:<br>
+        <small> <textarea id="roomURL" name="name" rows="1" style="min-width: 100%" wrap="hard">{{ room_url }}</textarea></small></p>
+        <p><strong> Chat:</strong> Say hi to the room via the chat client below.</p>
+        <hr>
+        <p><strong> Load video:</strong> Copy-paste a Youtube URL in <em>Load Video</em>.<br>
+          <small>Only one person needs to load the video: it'll automatically load on all browsers connected to this room.</small>
+        </p>
+        <p><strong> Take notes:</strong> Launch a shared scratchpad for realtime note-taking.<br>
+          <small>Save your notes before leaving the room.</small>
+        </p>
           </div>
       </div>
       <div class="modal-footer">

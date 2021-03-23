@@ -90,6 +90,7 @@
 
         document.getElementById("vidAlert").innerHTML = 'Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!<br>\
         <small>Room logs will appear here</small>';
+        document.getElementById("roomURL").select();
         /*document.getElementById("ShareRoom").value = window.location.href;
         function copyRoomName(){
           var copyText = window.location.href;
@@ -99,6 +100,10 @@
           alert(copyText);
         }*/
         console.log('name/room/joint: {{session.name}}, {{session.room}}, {{session.joint}}');
+
+        $(window).on('load', function(){
+            $('#howToModal').modal('show');
+        });
 
         $('.dropdown-menu input').click(function(e) {
                 e.stopPropagation(); //This will prevent the event from bubbling up and close the
