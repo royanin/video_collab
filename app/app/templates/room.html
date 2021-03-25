@@ -469,27 +469,20 @@
                //The API calls this function when a player state change happens
                 function onStateUpdate(state)
                {
-                   //console.log('in onStateUpdate');
                    var currentState = getCompleteState();
-                   console.log('in onStateUpdate');
-                   console.log(embedApi);
-                   console.log(currentState);
                    currentStateMessage(currentState);
                    socket.emit('state update', currentState);
-                   if (currentState['pstate']==1){
-                     if(api){
-                       !api.isAudioMuted().then(()=>{//mute the other audio stream if on
+                   if(api){
+                     api.isAudioMuted().then(muted => {//mute the other audio stream if on
+                       if (muted && currentState['pstate']==2){
                          api.executeCommand('toggleAudio');
-                       });
-                     }
-                   }
-                   if (currentState['pstate']==2){
-                     if(api){
-                       api.isAudioMuted().then(()=>{//mute the other audio stream if on
+                       }
+                       else if (!muted && currentState['pstate']==1){
                          api.executeCommand('toggleAudio');
-                       })
-                     }
+                       }
+                     })
                    }
+
                }
                function onPlaybackRateChange()
                {
