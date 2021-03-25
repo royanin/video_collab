@@ -134,32 +134,6 @@
            videoElemBox.appendChild(newVideoElem);
          }*/
 
-         /*
-         var converseRooms = converse.roomviews;
-         console.log(converse);
-
-         converse.initialize({
-            bosh_service_url: 'https://conversejs.org/http-bind/', // Please use this connection manager only for testing purposes
-            jid: 'nomnom.im',
-
-            authentication: 'anonymous',
-            allow_logout: false,
-            auto_login: true,
-            //theme: 'concord',
-            auto_join_rooms: [
-                //'anonymous@conference.nomnom.im',
-                {'jid': '{{ session.room }}@conference.nomnom.im', 'nick': '{{ session.name }}' }
-            ],
-            keepalive: true,
-            hide_muc_server: true, // Federation is disabled, so no use in
-            // showing the MUC server.
-            play_sounds: true,
-            view_mode: 'overlayed',
-            locked_muc_domain: false,
-            muc_show_logs_before_join: true,
-            //debug: true
-        }); */
-
 
 
         /*function getSize(){
@@ -223,6 +197,27 @@
                    "parentNode": jitsiDiv,
                    "width": "100%",
                    "height": "480px",
+                   configOverwrite: {
+                     startWithAudioMuted: true,
+                     enableWelcomePage: false,
+                   },
+                   interfaceConfigOverwrite: {
+                     GENERATE_ROOMNAMES_ON_WELCOME_PAGE: false,
+                     DISPLAY_WELCOME_FOOTER: false,
+                     DISPLAY_WELCOME_PAGE_ADDITIONAL_CARD: false,
+                     DISPLAY_WELCOME_PAGE_CONTENT: false,
+                     DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT: false,
+                     //toolbarButtons: [
+                     TOOLBAR_BUTTONS: [
+                      'microphone', 'camera', 'closedcaptions', 'desktop', 'hangup',
+                      //    'fodeviceselection', 'profile', 'chat', 'recording','fullscreen',
+                        //  'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand', 'embedmeeting',
+                        //  'videoquality', 'filmstrip', 'invite', 'feedback', 'stats', 'shortcuts',
+                        //  'tileview', 'select-background', 'download', 'help', 'mute-everyone', 'mute-video-everyone', 'security'
+                       ]
+                     }
+
+
                };
                api = new JitsiMeetExternalAPI(domain, options);
                socket.emit('launched_service', 'video chat');
@@ -357,6 +352,7 @@
                           embedApi.setPlaybackRate(1.0);
                           stateNow = getCompleteState();
                           embedApi.pauseVideo(); //Better to stop video and wait to synch
+
                           stateNow['vidURL'] = vidURL
                           document.getElementById("vidAlert").innerHTML = 'Syncing video for the newcomer';
                           socket.emit('video sync', stateNow);
@@ -406,23 +402,17 @@
                          console.log(msg);
                          if (msg['pstate']!== pstate){
                              if (msg['pstate']===2){
-                                 //document.getElementById("vidAlert").innerHTML = msg.who+' paused the video at '+timeEvent;
-                                 //document.getElementById("vidAlert").innerHTML = timeEvent+' - Video paused';
                                  embedApi.pauseVideo();
                                  embedApi.seekTo(Number(msg['ptime']));
 
                              }
                              else if (msg['pstate']===1){
-                                 //document.getElementById("vidAlert").innerHTML = msg.who+' started playing the video at '+timeEvent;
-                                 //document.getElementById("vidAlert").innerHTML = timeEvent+' - Video playback resumed';
                                  embedApi.seekTo(Number(msg['ptime']));
                                  embedApi.playVideo();
                              }
                            }
-                         //if (msg['pspeed']!== embedApi.getPlaybackRate()){
+
                          if (msg['what']=== "speed"){
-                                 //document.getElementById("vidAlert").innerHTML = msg.who+' changed the playback speed to '+msg.pspeed+'x at '+timeEvent;
-                                 //document.getElementById("vidAlert").innerHTML = timeEvent+' - Video playback speed changed to '+msg.pspeed+'x';
                                  embedApi.setPlaybackRate(msg['pspeed']);
                                  embedApi.seekTo(Number(msg['ptime']));
 
@@ -473,6 +463,7 @@
                    console.log(embedApi);
                    embedApi.pauseVideo();
 
+
                }
 
                //The API calls this function when a player state change happens
@@ -485,6 +476,20 @@
                    console.log(currentState);
                    currentStateMessage(currentState);
                    socket.emit('state update', currentState);
+                   if (currentState['pstate']==1){
+                     if(api){
+                       !api.isAudioMuted().then(()=>{//mute the other audio stream if on
+                         api.executeCommand('toggleAudio');
+                       });
+                     }
+                   }
+                   if (currentState['pstate']==2){
+                     if(api){
+                       api.isAudioMuted().then(()=>{//mute the other audio stream if on
+                         api.executeCommand('toggleAudio');
+                       })
+                     }
+                   }
                }
                function onPlaybackRateChange()
                {
