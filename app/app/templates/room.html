@@ -40,6 +40,7 @@
       <div class="p-2 m-2" id="vidBox">
         <div id="player" class="player"></div>
       </div>
+      <div class="p-2 m-2" id="videoInfo"></div>
 
       {% include "snippets/howto.html" %}
       <div>
@@ -196,7 +197,8 @@
                    },
                    "parentNode": jitsiDiv,
                    "width": "100%",
-                   "height": "480px",
+                   //"height": "480px",
+                   "height": "390px",
                    configOverwrite: {
                      startWithAudioMuted: true,
                      enableWelcomePage: false,
@@ -262,8 +264,21 @@
                    var newVideoElem = document.createElement("div");
                    newVideoElem.className="player";
                    newVideoElem.id="player";
-
                    videoElemBox.appendChild(newVideoElem);
+
+                   //show new video info:
+                   var vidInfo = document.getElementById("vinfo");
+                   if (vidInfo){
+                     vidInfo.remove();
+                   }
+                   var videoInfoBox = document.getElementById("videoInfo");
+                   var newVideoInfo = document.createElement("span");
+                   newVideoInfo.id="vinfo";
+                   var infoText = document.createTextNode("https://www.youtube.com/watch?v="+videoId);
+                   newVideoInfo.appendChild(infoText);
+                   videoInfoBox.appendChild(newVideoInfo);
+
+
                  }
 
 
@@ -292,7 +307,8 @@
                      console.log('creating youtube player');
                      embedApi = new YT.Player('player', {
                        width: '100%',
-                       height: '480px',
+                       //height: '390',
+                       height: '390',
                        videoId: videoId,
                        playerVars: { 'autoplay': 0, 'start': Math.floor(startTime)},
                        events: playerEvents
@@ -316,6 +332,17 @@
                    }
 
                  };
+
+                 jQuery(function() {
+                    function setAspectRatio() {
+                      jQuery('player').each(function() {
+                        jQuery(this).css('height', jQuery(this).width() * 9/16);
+                      });
+                    }
+
+                    setAspectRatio();
+                    jQuery(window).resize(setAspectRatio);
+                });
 
                  setTimeout(function(){
                    onIframeAPIReady(vtype, videoId);

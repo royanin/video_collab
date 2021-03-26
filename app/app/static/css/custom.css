@@ -180,9 +180,19 @@ div {
   box-shadow: 1px 1px 2px #bbb;
 }
 
+#vidBox {
+	height:1000;
+  width: 1000;
+  padding: 0;
+	overflow:hidden;
+}
+
 #player{
   box-shadow: 4px 4px 5px #777;
+  /*width: 600px;
+  height: 600px;*/
 }
+
 
 /*#meet{
   box-shadow: 4px 4px 5px #777;
@@ -235,7 +245,7 @@ div {
       display: none;
       cursor: ew-resize;
       border: 1px solid #ddd;
-      height: 520px;
+      height: 500px;
       visibility: visible;
   }
 
