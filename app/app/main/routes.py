@@ -3,7 +3,8 @@ from . import main
 from .forms import NewMeetingForm, JoinMeetingForm
 import sqlite3, json
 from .utils import record_room_create, read_room_create, parse_url, validate_newname,\
-validate_newroom, get_room_id_from_submitted_url
+validate_newroom, get_room_id_from_submitted_url, get_guest_stat_msg
+from .models import db, Room, CurrentUser
 import uuid
 from ..run_mode import env_var
 
@@ -26,6 +27,7 @@ def new_meeting():
         session['room'] = room
         record_room_create(room)
         session['joint'] = "{}.{}".format(room, name)
+        session['guest_stat'] = get_guest_stat_msg(name, room)
         return redirect(url_for('main.chat', room=room, _external = True, _scheme=env_var['http_scheme']))
     else:
         msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
@@ -46,6 +48,7 @@ def join_meeting():
         session['room'] = room_id
         if validate_newroom(room_id) is True:
             session['joint'] = "{}.{}".format(room_id, name)
+            session['guest_stat'] = get_guest_stat_msg(name, room_id)
             return redirect(url_for('main.chat', room=room_id, _external = True, _scheme=env_var['http_scheme']))
         else:
             msg = "The room link is not valid. Try again!"
@@ -54,7 +57,7 @@ def join_meeting():
 
     else:
         msg = "The room/name is not valid. Try again!"
-        return redirect(url_for('main.index'))
+        #return redirect(url_for('main.index'))
         return render_template("index.html", form=form,  form2=form2, msg=msg)
 
 
@@ -74,6 +77,7 @@ def chat(room):
         session['name'] = form.name.data
         if validate_newroom(room) is True:
             session['joint'] = "{}.{}".format(room, session['name'])
+            session['guest_stat'] = get_guest_stat_msg(session['name'], room)
             return render_template('room.html', room=room, room_url=room_url)
         else:
             msg = "Are you sure this is the correct room link? This room doesn't exist or not accessible."
@@ -87,6 +91,7 @@ def chat(room):
             return render_template("chooseName.html", form=form, msg="Entering room {}".format(room))
 
         else:
+            session['guest_stat'] = get_guest_stat_msg(name, room)
             return render_template('room.html', room=room, room_url=room_url)
 
 

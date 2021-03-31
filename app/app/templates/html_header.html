@@ -65,16 +65,17 @@
     <script src="/static/js/emojis.js"></script>
     <script src="/static/js/shared-connection-worker.js"></script> -->
     <!-- Include the Quill library -->
-    <script src="/static/js/quill.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.0/split.min.js"></script>
+    <script src="/static/js/quill.bundle.js"></script>
     <script src="/static/js/launchYjsEditor.js"></script>
     <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
     <script src="/static/js/emojipanel.js" crossorigin="anonymous"></script>
+    <script defer src="/static/js/all.js"></script> 
 
     {% endblock %}
 </head>
 <body>
-    <div id="content">{% block content %}{% endblock %}</div>
+    <div>{% block content2 %}{% endblock %}</div>
     <div id="footer">
       {% block footer %}
       <div class="container-fluid">

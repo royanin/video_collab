@@ -17,7 +17,9 @@ def joined(message):
     #time.sleep(0.5) #this ensures that the new client has time to render html
     join_room(room)
 
-    emit('status', {'msg': session.get('name') + ' joined the room!'},
+    #emit('status', {'msg': session.get('name') + ' joined the room'},
+    #                    room=room,  broadcast=True, include_self=False)
+    emit('status', {'msg': ''},
                         room=room,  broadcast=True, include_self=False)
 
 
@@ -128,8 +130,8 @@ def test_connect():
     room_id = session.get('room')
     print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count())
     ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
-    print('name:', session.get('name'), '\nulist',ulist)
-    emit('update message', {'msg': session.get('name') + ' has joined the room','ulist':ulist}, room=room_id)
+    print('\nusers_list',ulist)
+    emit('update message', {'msg': session.get('name') + ' joined the room','ulist':ulist}, room=room_id)
 
 @socketio.on('disconnect', namespace='/chat')
 def test_disconnect():
@@ -141,5 +143,5 @@ def test_disconnect():
     room_id = session.get('room')
     print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count(),'\nroom:',room_id)
     ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
-    #print('users_list:', ret_list)
+    print('users_list:', ulist)
     emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room_id)

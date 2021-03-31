@@ -2,29 +2,32 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="howToModalLongTitle">How to:</h5>
+        <h6 class="modal-title" id="howToModalLongTitle">Quick Start Guide:</h6>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body howTo">
         <div class="p-1 m-1">
-        <p><strong>Invite:</strong> Send room URL via email or messenger apps.<br>
+        <p>1. Send room URL via email or messenger apps.<br>
         <small> <textarea id="roomURL" name="name" rows="2" style="min-width: 100%" wrap="soft">{{ room_url }}</textarea></small></p>
-        <p><strong>Chat:</strong> Say hi to others via the chat client.<br>
-          <small>Video chat may be available in the menu option (experimental).</small>
+        <p>2. Say hi to others via the text chat. Launch video chat
+           with <span id="referButton"> CHAT&nbsp;<span class="fas fa-video"></span></span>
         </p>
-        <hr>
-        <p><small>From the dropdown menu above, you can</small></p>
-        <p><strong> Load video:</strong> Copy-paste a Youtube URL in <em>Load Video</em>.<br>
-          <small>Only one of you needs to load the video.</small>
+        <p>3. Decide what to watch, paste the URL above "Copy paste Youtube URL...", and hit
+          <span id="referButton"> PLAY&nbsp;<span class="far fa-play-circle"></span></span><br>
+          <small>Only one person has to load the video.</small>
         </p>
-        <p><strong> Take notes:</strong> Launch a shared scratchpad.<br>
+        <p>4. Use <span id="referButton"> WRITE&nbsp;<span class="fas fa-file-alt fa-lg"></span></span>
+          to show/hide your shared scratchpad. Insert the video timestamp in your notes with
+          <span id="referButton"><span class="fas fa-clock fa-lg"></span></span>
+          <br>
           <small>Save your notes before leaving the room.</small>
         </p>
           </div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer justify-content-between">
+        <span><small>Click on <span id="referButton">?</span> to view this guide.</small></span>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>

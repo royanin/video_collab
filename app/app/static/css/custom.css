@@ -22,12 +22,51 @@ width: 48%;
 Goes with notepad
 */
 
+body {
+    color: #555;
+    font-size: 0.8em;
+    font-family: 'Montserrat', sans-serif;
+
+}
+
+.sidePanel{
+  color: #555;
+  font-size: 0.8em;
+  font-family: 'Montserrat', sans-serif;
+
+}
+
+.btn{
+  font-size: 0.9em;
+}
+
+.form-control:first-child{
+  font-size: 0.9em;
+}
+.input-group .form-control:first-child, .input-group-append:first-child, .btn:first-child {
+  font-size: 0.9em;
+}
+
+#referButton{
+  background-color: transparent;
+  color: blue;
+  font-size: 0.6em;
+  padding: 4px;
+  border: 1px solid blue;
+  border-radius: 2px;
+
+}
+/*
 p {
-  font-size: 1.0em;
+  font-size: 0.9em;
 }
 
 div {
-  font-size: 1.0em;
+  font-size: 0.9em;
+}*/
+
+.howTo{
+  line-height: 1.9em;
 }
 .dropdown-menu {
   min-width:500px;
@@ -171,9 +210,13 @@ div {
   padding: 4px;
 }
 
-#vidAlertBox{
+#vidAlert{
+  font-size: 12px;
   border: 1px solid #fff;
   border-radius: 2px;
+  min-height: 30px;
+  height: 80px;
+  overflow-y: scroll;
   background-color: #fff;
   color: #777;
   padding: 1px;
@@ -222,34 +265,80 @@ div {
   margin-bottom: 0em;
 } */
 
-.sidePanel{
-  color: #555;
-  font-size: 0.8em;
-  font-family: 'Montserrat', sans-serif;
 
+
+#videoInfo{
+  font-size: 12px;
 }
 
-
 #editor2{
-
-  height: 500px;
+  display: none;
+  height: 400px;
   overflow-y: scroll;
 }
 
-  .flex {
+.ql-toolbar.ql-snow{
+  display: none;
+}
+
+#editorInsert{
+  display: none;
+}
+  #flex {
+      display: flex;
+      flex-direction: column;
+      overflow: scroll;
+  }
+
+  #flex2 {
       display: flex;
       flex-direction: row;
   }
 
+  #e {
+    overflow-x: hidden;
+    overflow-y: scroll;
+  }
+
+/*
+  .gutter {
+      background-color: #eee;
+      background-repeat: no-repeat;
+      background-position: 100%;
+  } */
+/*
   .gutter.gutter-horizontal {
-      display: none;
+      display: block;
       cursor: ew-resize;
       border: 1px solid #ddd;
       height: 500px;
       visibility: visible;
   }
+*/
 
 
+.gutter {
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-position: 40%;
+}
+
+  .gutter.gutter-vertical {
+      display: block;
+      cursor: ns-resize;
+      border: 1px solid #ddd;
+      width: 100px;
+      visibility: visible;
+  }
+
+  .gutter.gutter-horizontal {
+      display: none;
+      cursor: ew-resize;
+      background-image: url('/static/img/vertical.png');
+      border: 1px solid #fff;
+      height: 500px;
+      visibility: visible;
+  }
   .meet2 {
     display: flex;
     flex-direction: column;

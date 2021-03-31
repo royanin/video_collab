@@ -3,7 +3,7 @@ from datetime import datetime,timezone
 import random, string
 from urllib.parse import urlparse, parse_qs
 from flask import current_app
-from .models import db, Room
+from .models import db, Room, CurrentUser
 
 '''
 def write_chat(conn, ts, room_id, username, text):
@@ -43,6 +43,17 @@ def read_chat(conn, room_id, limit_=25, timestamp_=datetime.now(timezone.utc).ti
     else:
         return (None, None)
 '''
+def get_guest_stat_msg(name, room_id):
+    ulist_all = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
+    ulist = [ u_ for u_ in ulist_all if u_!= name]
+    num_guests = len(ulist)
+    if num_guests==0:
+        guest_stat_msg = "You are the only one in the room"
+    else:
+        guest_string = (", ".join(ulist))[:25]
+        guest_stat_msg ='{} guests: {}, {}'.format(num_guests+1, name, guest_string)
+
+    return guest_stat_msg
 
 def record_room_create(room_id):
     ts = datetime.now(timezone.utc).timestamp()

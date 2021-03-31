@@ -1,4 +1,4 @@
-    function launchEditor(name_){
+    function launchEditor(name_, room_){
 
             window.Y = yjquill.Y;
             window.WebsocketProvider = yjquill.WebsocketProvider;
@@ -10,7 +10,7 @@
 
             window.addEventListener('load', () => {
               const ydoc = new Y.Doc()
-              const provider = new WebsocketProvider('wss://demos.yjs.dev', "{{ session.room }}", ydoc)
+              const provider = new WebsocketProvider('wss://demos.yjs.dev', room_, ydoc)
               //const provider = new WebsocketProvider('wss://localhost:1234', "{{ session.room }}", ydoc)
               const ytext = ydoc.getText('quill')
               //const editorContainer = document.createElement('div')
@@ -23,7 +23,7 @@
                   toolbar: [
                     [{ header: [1, 2, false] }],
                     ['bold', 'italic', 'underline'],
-                    ['image', 'code-block']
+                    ['code-block']
                   ],
                   history: {
                     userOnly: true
@@ -33,7 +33,7 @@
                 theme: 'snow' // or 'bubble'
               })
 
-              const binding = new QuillBinding(ytext, editor, provider.awareness)
+              binding = new QuillBinding(ytext, editor, provider.awareness)
 
 
 
@@ -44,6 +44,5 @@
                 name: name_,
                 color: 'blue'
               })
-
             })
     }

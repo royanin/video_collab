@@ -5,11 +5,11 @@
 {% block head %}
   {{ super() }}
 {% endblock %}
-{% block content %}
+{% block content2 %}
 <div class="container-fluid">
-  <div class="p-1 m-1 row"></div>
+  <div class="p-2 m-2 row"></div>
   <div class="row">
-  <div id='hamburger' class="col-md-1">
+    {#<div id='hamburger' class="col-md-1">
     <div class="dropdown">
     <button type="button" class="btn btn-outline-secondary dropdown-toggle"
     id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -19,53 +19,101 @@
       <rect y="50" width="100" height="12" rx="4" stroke="#777" stroke-width="5"></rect>
     </svg>
     </button>
-    {% include "snippets/menuoptions.html" %}
+
     </div>
-  </div>
-  <div class="col-md-2">
-</div>
-  <div class="col-md-6">
-    <div id='vidAlertBox' class="p-2 text-center"><small><em><span id='vidAlert'></span></em></small></div>
-  </div>
-  <div class="col-md-2">{#<a href="#" onclick="leave_room();">Leave this room</a>#}</div>
-  <div id='howtoDiv' class="col-md-1 text-right">
-    <button type="button" class="btn btn-outline-secondary btn-lg" data-toggle="modal" data-target="#howToModal">?</button>
-  </div>
-  </div>
-  <div class="p-1 m-1 row"></div>
-</div>
-<div class="container-fluid">
-<div class="flex">
-    <div id="a">
-      <div class="p-2 m-2" id="vidBox">
-        <div id="player" class="player"></div>
-      </div>
-      <div class="p-2 m-2" id="videoInfo"></div>
+    </div>#}
 
-      {% include "snippets/howto.html" %}
-      <div>
-        <!--<h5>Guests in the room:</h5>
-        <p id="roomGuests"></p>-->
-      </div>
+    <div class="col-md-3">
+      {% include "snippets/menuoptions.html" %}
     </div>
-
-
-    <div id="b">
-        <div class="meet2" id="meet">
+    <div class="col-md-6">
+      {#<div id='vidAlertBox' class="p-2 text-center"><small><em><span id='vidAlert'></span></em></small></div>#}
+      {#<div id="loadNewVideoButton" class="input-group input-group-sm mb-3">
+        <input type="text" id="videoURL" class="form-control input-lg" placeholder='e.g., https://www.youtube.com/watch?v=nykOeWgQcHM'
+        aria-label="New video URL" aria-describedby="basic-addon2">
+        <div class="input-group-append">
+          <button class="btn btn-xs btn-outline-secondary" onclick="loadNewVideo()" type="button">load video</button>
         </div>
+      </div>#}
+    </div>
+    <div class="col-md-1">{#<a href="#" onclick="leave_room();">Leave this room</a>#}</div>
+    <div id='howtoDiv' class="col-md-2 text-right">
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#howToModal">?</button>
+    </div>
   </div>
 </div>
+<!--<h5>Guests in the room:</h5>
+<p id="roomGuests"></p>-->
+
+<div id="content" class="container-fluid">
+    <div id="flex2">
+    <div id="c">
+        <button class="btn btn-sm btn-outline-primary" id="jitsiStart" type="button"
+        data-toggle="tooltip" data-placement="right" title="Launch video/audio chat">
+          CHAT&nbsp;<i class="fas fa-video"></i>
+        </button>
+        <div class="meet2" id="meet"></div>
+    </div>
+    <div id="d">
+        <div id="loadNewVideoButton" class="input-group input-group-sm pr-4 pl-4">
+          <input type="text" id="videoURL" class="form-control input-lg" placeholder='e.g., https://www.youtube.com/watch?v=nykOeWgQcHM'
+          aria-label="New video URL" aria-describedby="basic-addon2">
+          <div class="input-group-append">
+            <button class="btn btn-sm btn-outline-primary" onclick="loadNewVideo()" type="button"
+            data-toggle="tooltip" data-placement="top" title="type in video URL; it will load for everyone"
+            style="font-size:0.9em;">PLAY&nbsp;
+            <i class="far fa-play-circle"></i></button>
+          </div>
+        </div>
+        <small class="pl-4">Copy paste Youtube URL to load video</small><br>
+        <div class="p-2 m-2" id="vidBox">
+          <div id="player" class="player"></div>
+        </div>
+        <div class="p-2 m-2" id="videoInfo"></div>
+    </div>
+    <div id="e">
+        <div class="btn-group float-sm-right" role="group" aria-label="editor buttons">
+          <button class="btn btn-sm btn-outline-primary" id="editorInsert" onclick="tsEditor();" type="button">
+            <i class="fas fa-clock fa-lg"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-primary" id="editorToggle" onclick="toggleEditor();" type="button">
+            WRITE&nbsp;<i class="fas fa-file-alt fa-lg"></i>
+          </button>
+        </div>
+        <div class="editor" id="editor2">
+          {#<iframe src="{{ url_for('main.editor', room=session.room ) }}" width="100%" height="100%"></iframe>#}
+
+        </div>
+    </div>
+    </div>
+
 </div>
+
+{% include "snippets/howto.html" %}
+
+<div class="container-fluid">
+  <div class="p-1 m-1 row"></div>
+    <div class="col-md-6 fixed-bottom">
+      <p>
+      <small>Room logs&nbsp;<i class="fas fa-bullhorn"></i></small>
+      <span id="roomGuests" class="float-sm-right"><small>{{ session.guest_stat }}</small></span>
+      </p>
+      <div id='vidAlert'>
+        <!--<small><em><span id='vidAlert'></span></em></small></div>-->
+    </div>
+    </div>
+    <!--<div class="col-md-6"></div>-->
+</div>
+
 <div id="minimizedChatClientDiv" class="minChatClient">
   <button id="minimizedChatClientBtn" onclick="maximizeChatClient()" type="button"
-  class="btn btn-lg btn-secondary">chat</button>
+  class="btn btn-lg btn-secondary"><i class="far fa-comments"></i></button>
 </div>
 <div id="emojiContainer"></div>
 <div id="chatClient" class="chatClient">
   <div  id="chatHead" class="chatHead">
     <div class="text-right">
       <div class="btn-group" role="group" aria-label="First group">
-        <!--<button id="popoutChatclientBtn" onclick="popClient()" type="button" class="btn btn-sm btn-light">p</button>-->
         <button id="minimizeChatclientBtn" onclick="minimizeClient()" type="button" class="btn btn-sm btn-light">
           <strong>&#8212;</strong>
         </button>
@@ -80,7 +128,7 @@
   <div id="chatInput" class="chatInput">
 
     <div id="chatTextEmoji" class="input-group input-group-sm mb-3">
-      <button id="emojiToggle" class="btn btn-sm btn-light" type="button"> 😀</button>
+      <button id="emojiToggle" class="btn btn-sm btn-light" type="button"><i class="far fa-smile fa-lg"></i></button>
       <input type="text" id="text" contenteditable="true"  class="form-control" placeholder='Send a message'
       aria-label="Chat client text input area" aria-describedby="basic-addon3">
     </div>
@@ -89,17 +137,23 @@
 
 <script type="text/javascript" charset="utf-8">
 
-        document.getElementById("vidAlert").innerHTML = 'Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!<br>\
-        <small>Room logs will appear here</small>';
+        function postRoomLogs(msg){
+          if (msg!=''){
+            console.log('in postRoomLogs function');
+            console.log('msg: '+msg);
+            //var last = $('#vidAlert span').last().text();
+            //console.log('last: ',last);
+            document.getElementById("vidAlert").innerHTML += '<span>'+msg+'</span><br>';
+            $('#vidAlert').scrollTop($('#vidAlert').get(0).scrollHeight);
+          }
+        }
+
+        //document.getElementById("vidAlert").innerHTML = 'Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!<br>'
+        //$('vidAlert').append('Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!')
+        var msg = 'Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!'
+        postRoomLogs(msg);
         document.getElementById("roomURL").select();
-        /*document.getElementById("ShareRoom").value = window.location.href;
-        function copyRoomName(){
-          var copyText = window.location.href;
-          copyText.select();
-          copyText.setSelectionRange(0, 99999);
-          document.execCommand("copy");
-          alert(copyText);
-        }*/
+
         console.log('name/room/joint: {{session.name}}, {{session.room}}, {{session.joint}}');
 
         $(window).on('load', function(){
@@ -111,15 +165,23 @@
                 //dropdown when you type/click on text boxes.
             });
 
-        Split(['#a', '#b'], {
-          direction: 'horizontal',
-          sizes: [60, 40],
-          minSize:[300,100],
-          maxSize:[800,300],
-        gutterSize: 8,
-        cursor: 'col-resize',
-      }
-    )
+
+/*        Split(['#x', '#y'], {
+            gutterSize: 8,
+            sizes: [70,30],
+            minSize: [100, 100],
+            direction: "vertical"
+        });*/
+
+        Split(['#c', '#d', '#e'], {
+              direction: 'horizontal',
+              sizes: [30, 40, 30],
+              minSize:[175, 175,175],
+              maxSize:[400, 600,600],
+            gutterSize: 8,
+            cursor: 'col-resize',
+          }
+        )
 
 
         //Check if other converse instances already exist:
@@ -162,14 +224,57 @@
         } */
 
           //editor
+          /*
           var editorButton = document.querySelector('#editorStart');
           editorButton.addEventListener('click', () => {
             let params = `scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no,
              width=500,height=620,left=500,top=100`;
              open('/editor/{{ session.room }}', 'test', params);
              socket.emit('launched_service', 'scratchpad');
-          });
+          });*/
 
+          //editor
+
+          var name_ = '{{ session.name }}';
+          var room_ = '{{ session.room }}';
+          editor = launchEditor(name_, room_);
+          //console.log('editor:', editor);
+
+          function tsEditor(){
+            console.log('binding:', window.binding);
+            quill = window.binding.quill;
+            quill.focus();
+            if(embedApi){
+              var currentState = getCompleteState();
+              var insert = '\n'+Math.floor(currentState['ptime']/60)+'min. '+Math.round(currentState['ptime']%60)+'sec.: ';
+
+            }
+            else {
+              var insert = "No video: ¯\\_(ツ)_/¯\n";
+            }
+            //var insert = "ha ha ha\n";
+            var caretPosition = quill.getSelection(true);
+            quill.insertText(caretPosition, insert);
+          }
+
+          function toggleEditor(){
+            $("#editor2").toggle();
+            $(".ql-toolbar.ql-snow").toggle();
+            $("#editorInsert").toggle();
+            $(".gutter").show();
+            /*var x = document.getElementById("editor2");
+            var y = document.getElementById("editorInsert");
+            if (x.style.display!=="block"){
+              console.log('in toggleEditor if');
+              x.style.display==="block";
+              y.style.display==="block";
+            } else {
+              console.log('in toggleEditor else');
+              console.log(x.style.display);
+              x.style.display==="none";
+              y.style.display==="none"
+            }*/
+          }
            //Jitsi
 
            var button = document.querySelector('#jitsiStart');
@@ -178,7 +283,7 @@
 
            button.addEventListener('click', () => {
              $('#jitsiStart').prop("disabled",true);
-             $( ".gutter.gutter-horizontal" ).show();
+             $( ".gutter" ).show();
              //alert("jitisStart clicked");
              //let params = `scrollbars=no,resizable=yes,status=no,location=no,toolbar=no,menubar=no,
               //width=600,height=480,left=500,top=100`;
@@ -259,7 +364,7 @@
                 var videoElem = document.getElementById("player");
                 if (videoElem){
                    videoElem.remove();
-                   $( ".gutter.gutter-horizontal" ).show();
+                   $( ".gutter" ).show();
                    var videoElemBox = document.getElementById("vidBox");
                    var newVideoElem = document.createElement("div");
                    newVideoElem.className="player";
@@ -350,6 +455,19 @@
 
                }
 
+               function guestStats(ulist){
+                   var numGuests = ulist.length;
+                   if (numGuests === 1){
+                     var guestStatMsg = "You are the only one in the room.";
+                   }
+                   else{
+                     var guestStatMsg = numGuests+' guests: <strong>'+ulist.join(", ").substring(0,25)+'</strong>';
+                   }
+                   console.log(' guestStatMsg', guestStatMsg);
+                   document.getElementById("roomGuests").innerHTML = "<small>"+guestStatMsg+"</small>"
+                   //$("#roomGuests").html("<small>"+guestStatMsg+"</small>");
+                   console.log(ulist);
+               }
 
                 //SocketIO segment
                 var socket;
@@ -367,12 +485,10 @@
 
                     socket.on('status', function(data) {
                         //something about loading videos:
-                        if (typeof data['ulist']!="undefined"){
-                            console.log(data['ulist']);
-                            $("#roomGuests").html("<span>"+data['ulist']+"</span>");
+                        //console.log('ulist:', data['ulist']);
+                        //guestStats(data['ulist']);
 
-                        }
-                        document.getElementById("vidAlert").innerHTML = data['msg'];
+                        postRoomLogs(data['msg']);
                         if (embedApi) {
                           var vidURL = embedApi.getVideoUrl();
 
@@ -381,7 +497,9 @@
                           embedApi.pauseVideo(); //Better to stop video and wait to synch
 
                           stateNow['vidURL'] = vidURL
-                          document.getElementById("vidAlert").innerHTML = 'Syncing video for the newcomer';
+                          //document.getElementById("vidAlert").innerHTML = 'Syncing video for the newcomer';
+                          //$('vidAlert').append('Syncing video for the newcomer<br>');
+                          postRoomLogs('Syncing video for the newcomer');
                           socket.emit('video sync', stateNow);
 
                         }
@@ -389,11 +507,14 @@
                     });
 
                     socket.on('update message', function(data) {
-                      document.getElementById("vidAlert").innerHTML = data['msg'];
+                      //document.getElementById("vidAlert").innerHTML = data['msg'];
+                      //$('vidAlert').append(data['msg']+'<br>');
+                      console.log('ulist:', data['ulist']);
                       if (typeof data['ulist']!="undefined"){
-                          $("#roomGuests").html("<span>"+data['ulist']+"</span>");
-
+                        console.log('ulist:', data['ulist']);
+                        postRoomLogs(data['msg']);
                       }
+                      guestStats(data['ulist']);
                     });
 
                     socket.on('message', function(data) {
@@ -454,16 +575,23 @@
                      socket.on('video updated', function(response){
                        var timeEvent = new Date(1000*response.when).toLocaleTimeString();
                        if(response['type']!=''){
-                           document.getElementById("vidAlert").innerHTML = response.who+' selected a new video at '+timeEvent;
+                           //document.getElementById("vidAlert").innerHTML = response.who+' selected a new video at '+timeEvent;
+                           //$('vidAlert').append(response.who+' selected a new video at '+timeEvent+'<br>');
+                           var msg = response.who+' selected a new video at '+timeEvent
+                           postRoomLogs(msg);
                            videoLoader(response['type'], response['key']);
                        }
 
                      });
 
                      socket.on('video synced', function(stateNow){
-                       document.getElementById("vidAlert").innerHTML = 'Loading video...';
+                       //document.getElementById("vidAlert").innerHTML = 'Loading video...';
+                       //$('vidAlert').append('Loading video...<br>');
+                       postRoomLogs('Loading video...');
                        videoLoader(stateNow['vtype'], stateNow['vkey'], startTime = stateNow['ptime']);
-                       document.getElementById("vidAlert").innerHTML = 'Video ready to play.';
+                       //document.getElementById("vidAlert").innerHTML = 'Video ready to play.';
+                       //$('vidAlert').append('Video ready to play.<br>');
+                       postRoomLogs('Video ready to play');
                      });
 
                 }); //closing socket function
@@ -540,8 +668,11 @@
                function currentStateMessage(currentState){
                  var stateString = (currentState['pstate']===1)? 'playing from ' : 'paused/stopped at ' ;
                  var videoTime = Math.floor(currentState['ptime']/60)+'min. '+Math.round(currentState['ptime']%60)+'sec. ';
-                 document.getElementById("vidAlert").innerHTML = 'Video '+stateString+videoTime+'\
-                  at '+currentState['pspeed']+'x speed';
+                 //document.getElementById("vidAlert").innerHTML = 'Video '+stateString+videoTime+'\
+                //  at '+currentState['pspeed']+'x speed';
+                //$(vidAlert).append('Video '+stateString+videoTime+'  at '+currentState['pspeed']+'x speed<br>');
+                var msg = 'Video '+stateString+videoTime+' at '+currentState['pspeed']+'x speed';
+                postRoomLogs(msg);
 
                }
 
@@ -567,7 +698,9 @@
                    success: function(response){
                      if(response['type']!='' || response['key']!=''){
                        videoLoader(response['type'], response['key']);
-                       document.getElementById("vidAlert").innerHTML = 'You loaded a new video in the room';
+                       //document.getElementById("vidAlert").innerHTML = 'You loaded a new video in the room';
+                       //$('vidAlert').append('You loaded a new video in the room<br>');
+                       postRoomLogs('You loaded a new video in the room');
                        socket.emit('video update', response); //broadcast the new video to everyone
                      }
                      else {
