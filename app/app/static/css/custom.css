@@ -23,14 +23,14 @@ Goes with notepad
 */
 
 body {
-    color: #555;
+    color: #222;
     font-size: 0.8em;
     font-family: 'Montserrat', sans-serif;
 
 }
 
 .sidePanel{
-  color: #555;
+  color: #222;
   font-size: 0.8em;
   font-family: 'Montserrat', sans-serif;
 
@@ -116,7 +116,7 @@ div {
   /*border: solid 1px gray;*/
 }
 #text{
-  font-size: 0.8em;
+  font-size: 0.9em;
 }
 /*
 .chat-announce{
@@ -198,6 +198,7 @@ div {
 }
 
 .EmojiPanel{
+  top: 30px;
   background-color: #fff;
   z-index: 300;
 }
@@ -268,16 +269,20 @@ div {
 
 
 #videoInfo{
-  font-size: 12px;
+  font-size: 0.8em;
 }
 
 #editor2{
   display: none;
   height: 400px;
+  font-size: 0.8em;
+  font-family: 'Montserrat', sans-serif;
   overflow-y: scroll;
 }
 
 .ql-toolbar.ql-snow{
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8em;
   display: none;
 }
 

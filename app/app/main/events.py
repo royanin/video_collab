@@ -120,7 +120,6 @@ def service_launch(service_name):
 @socketio.on('connect', namespace='/chat')
 def test_connect():
     #print('Connect -- sid:',request.sid)
-    #print(session)
     #update current user:
     print('in events: session:', session)
     current_user = CurrentUser(room_id=session.get('room'), sid=request.sid, screenName=session.get('name'))
@@ -131,6 +130,7 @@ def test_connect():
     print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count())
     ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
     print('\nusers_list',ulist)
+
     emit('update message', {'msg': session.get('name') + ' joined the room','ulist':ulist}, room=room_id)
 
 @socketio.on('disconnect', namespace='/chat')
@@ -141,7 +141,7 @@ def test_disconnect():
     CurrentUser.query.filter_by(sid=request.sid).delete()
     db.session.commit()
     room_id = session.get('room')
-    print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count(),'\nroom:',room_id)
+    #print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count(),'\nroom:',room_id)
     ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
     print('users_list:', ulist)
     emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room_id)

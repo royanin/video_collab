@@ -50,7 +50,11 @@ def get_guest_stat_msg(name, room_id):
     if num_guests==0:
         guest_stat_msg = "You are the only one in the room"
     else:
-        guest_string = (", ".join(ulist))[:25]
+        guest_string_ = (", ".join(ulist))
+        if len(guest_string_)>30:
+            guest_string = guest_string_[:30]+'...'
+        else:
+            guest_string = guest_string_
         guest_stat_msg ='{} guests: {}, {}'.format(num_guests+1, name, guest_string)
 
     return guest_stat_msg

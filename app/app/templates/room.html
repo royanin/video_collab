@@ -7,8 +7,8 @@
 {% endblock %}
 {% block content2 %}
 <div class="container-fluid">
-  <div class="p-2 m-2 row"></div>
-  <div class="row">
+  <div class="p-1 m-2 row"></div>
+  <div class="pb-1 m-1 row">
     {#<div id='hamburger' class="col-md-1">
     <div class="dropdown">
     <button type="button" class="btn btn-outline-secondary dropdown-toggle"
@@ -41,6 +41,7 @@
       <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#howToModal">?</button>
     </div>
   </div>
+
 </div>
 <!--<h5>Guests in the room:</h5>
 <p id="roomGuests"></p>-->
@@ -94,11 +95,11 @@
 <div class="container-fluid">
   <div class="p-1 m-1 row"></div>
     <div class="col-md-6 fixed-bottom">
-      <p>
+      <span>
       <small>Room logs&nbsp;<i class="fas fa-bullhorn"></i></small>
       <span id="roomGuests" class="float-sm-right"><small>{{ session.guest_stat }}</small></span>
-      </p>
-      <div id='vidAlert'>
+      </span><br>
+      <div class="p-1 m-2" id='vidAlert'>
         <!--<small><em><span id='vidAlert'></span></em></small></div>-->
     </div>
     </div>
@@ -128,7 +129,8 @@
   <div id="chatInput" class="chatInput">
 
     <div id="chatTextEmoji" class="input-group input-group-sm mb-3">
-      <button id="emojiToggle" class="btn btn-sm btn-light" type="button"><i class="far fa-smile fa-lg"></i></button>
+      <button id="emojiToggle" class="btn btn-sm btn-light" onclick="countEmojiToggle();" type="button">
+        <i class="far fa-smile fa-lg"></i></button>
       <input type="text" id="text" contenteditable="true"  class="form-control" placeholder='Send a message'
       aria-label="Chat client text input area" aria-describedby="basic-addon3">
     </div>
@@ -780,6 +782,7 @@
 
               function minimizeClient(){
                 //alert('Client to be minimized');
+                dismissEmojiPanel(); //check if the emojiPanel needs minimizing
                 $('#chatClient').hide();
                 $('#minimizedChatClientDiv').show();
               }
@@ -790,15 +793,38 @@
               }
 
               //emojis!
+              emojiTogState = 0;
+
               new EmojiPanel({
                   container: '#emojiContainer',
                   trigger: '#emojiToggle',
+                  frequent: 'false',
                   //editable: '#emojiDest',
                   editable: '#text',
                   placement: 'top',
                   json_url: '/static/emojis.json'
               });
-              // When the user clicks anywhere outside of the modal, close it
+
+              function countEmojiToggle(){
+                emojiTogState += 1;
+              }
+
+              function dismissEmojiPanel(){
+                if (emojiTogState%2==1){
+                  $('#emojiToggle').click();
+                }
+              }
+
+              // When the user clicks anywhere in the chat client outside emoji, close it
+              $( "#text" ).click(function() {
+                  dismissEmojiPanel();
+              });
+
+              $('.chatMessages').click(function() {
+                  dismissEmojiPanel();
+              });
+
+
               /*var emojipane = document.getElementById('emojiContainer');
               window.onclick = function(event) {
                 if (event.target != emojipane) {
