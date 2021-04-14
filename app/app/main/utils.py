@@ -3,7 +3,8 @@ from datetime import datetime,timezone
 import random, string
 from urllib.parse import urlparse, parse_qs
 from flask import current_app
-from .models import db, Room, CurrentUser
+#from .models import db, Room, CurrentUser, RoomEvents
+from .models import *
 
 '''
 def write_chat(conn, ts, room_id, username, text):
@@ -59,20 +60,45 @@ def get_guest_stat_msg(name, room_id):
 
     return guest_stat_msg
 
-def record_room_create(room_id):
+def record_room_create(room_string, room_type='da', room_creator_uid = None,
+                        room_state = 'a'):
+    #room_type: 'd2' is demo for 2, 'da' -> demo for any
+    #room_state: 'a' for active; could be inactive, read-only, secure etc. etc.
     ts = datetime.now(timezone.utc).timestamp()
-    new_room = Room(timestamp=ts, room_id=room_id)
-    print(new_room)
+    new_room = Room(timestamp=ts, room_string=room_string, room_type=room_type,
+                        room_creator_uid = room_creator_uid, room_state = room_state)
+    #print(new_room)
     db.session.add(new_room)
     db.session.commit()
-    return ()
+    return new_room.id
 
-def read_room_create(room_id, time_window = 600):
-    ret_list = Room.query.filter_by(room_id=room_id).first()
-    if ret_list != None:
-        return 'room_exists'
-    else:
-        return 'room_notfound'
+
+def record_event(room_id, event_type, event_details=None):
+    '''
+    dictionary for event_type, event_details
+    'rc': 'room created',
+    'uj':'user joined', 'sid'
+    'ul':'user left', 'sid'
+    'tc':'text sent', 'sid'
+    'vl':'video chat launched', 'sid'
+    'vd':'video chat dismissed', 'sid'
+    'es':'editor toggle', 'sid'
+    'wl':'online video loaded',
+    'wp':'watching paused', 'timstamp'
+    'ws':'watching started/resumed', 'timstamp'
+    'wf':'watching speed changed', 'new speed'
+    'ep':'emoji panel toggled', 'sid'
+    'et':'editor timestamp insert used', 'sid'
+    'en':'editor username insert used', 'sid'
+    'qs':'quick start clicked', 'sid'
+    '''
+    #This is a temporary implementation -- should be written with a buffer?
+    ts = datetime.now(timezone.utc).timestamp()
+    new_event = RoomEvents(timestamp=ts, room_id = room_id,
+                        event_type = event_type, event_details = event_details)
+    db.session.add(new_event)
+    db.session.commit()
+    return ()
 
 
 def parse_url(url):
@@ -123,8 +149,13 @@ def parse_url(url):
 def get_room_id_from_submitted_url(room_url):
     if room_url[-1]=='/':
         room_url.rstrip('/')
-    room_id = room_url.split("/")[-1]
-    return room_id
+    room_string = room_url.split("/")[-1]
+
+    room = Room.query.filter_by(room_string=room_string).first()
+    if room != None:
+        return room.room_string, room.id
+    else:
+        return None, None
 
 def validate_newname(name):
     '''
@@ -142,14 +173,14 @@ def validate_newname(name):
         msg_ = "Let's try again. Shall we?"
     return name, msg_
 
-def validate_newroom(room):
-    print('in util validate_newroom: {}'.format(room))
-    if read_room_create(room)=="room_exists":
-        print("room {} exists".format(room))
-        return True
+def validate_newroom(room_string):
+    #time_window = 600 for certain room type?
+    room = Room.query.filter_by(room_string=room_string).first()
+    if room != None:
+        return room.id
     else:
-        print("room {} DOES NOT exist".format(room))
-        return False
+        return None
+
     '''
     if len(room)==32:
         return True

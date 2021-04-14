@@ -296,6 +296,7 @@
                  data-dismiss="alert" aria-label="Close">\
                    <span aria-hidden="true">&times;</span></button></div>')
 
+               //var domain = "meet.ojar-expt.com";
                var domain = "meet.jit.si";
                var options = {
                    "roomName": "{{ session.room }}",
@@ -307,7 +308,7 @@
                    //"height": "480px",
                    "height": "390px",
                    configOverwrite: {
-                     startWithAudioMuted: true,
+                     startWithAudioMuted: false,
                      enableWelcomePage: false,
                    },
                    interfaceConfigOverwrite: {

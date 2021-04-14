@@ -2,9 +2,10 @@ from flask import session, redirect, url_for, render_template, request, current_
 from . import main
 from .forms import NewMeetingForm, JoinMeetingForm
 import sqlite3, json
-from .utils import record_room_create, read_room_create, parse_url, validate_newname,\
+from .utils import record_room_create, parse_url, validate_newname,\
 validate_newroom, get_room_id_from_submitted_url, get_guest_stat_msg
-from .models import db, Room, CurrentUser
+#from .models import db, Room, CurrentUser
+from .models import *
 import uuid
 from ..run_mode import env_var
 
@@ -24,10 +25,10 @@ def new_meeting():
         session['name'] = name
         u = uuid.uuid4()
         room = u.hex
-        session['room'] = room
-        record_room_create(room)
+        room_id = record_room_create(room)
+        session['room'], session['room_id'] = room, room_id
         session['joint'] = "{}.{}".format(room, name)
-        session['guest_stat'] = get_guest_stat_msg(name, room)
+        session['guest_stat'] = get_guest_stat_msg(name, room_id)
         return redirect(url_for('main.chat', room=room, _external = True, _scheme=env_var['http_scheme']))
     else:
         msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
@@ -44,8 +45,19 @@ def join_meeting():
         session['name'] = name
         room_url = form2.url.data
         #just extract the room id:
-        room_id = get_room_id_from_submitted_url(room_url)
-        session['room'] = room_id
+        room_string, room_id = get_room_id_from_submitted_url(room_url)
+        if room_string !=None and room_id != None:
+            session['room'], session['room_id'] = room_string, room_id
+            session['joint'] = "{}.{}".format(room_string, name)
+            session['guest_stat'] = get_guest_stat_msg(name, room_id)
+            return redirect(url_for('main.chat', room=room_string, _external = True, _scheme=env_var['http_scheme']))
+        else:
+            msg = "The room/name is not valid. Try again!"
+            return render_template("index.html", form=form,  form2=form2, msg=msg)
+    else:
+        msg = "The room/name is not valid. Try again!"
+        return render_template("index.html", form=form,  form2=form2, msg=msg)
+        '''
         if validate_newroom(room_id) is True:
             session['joint'] = "{}.{}".format(room_id, name)
             session['guest_stat'] = get_guest_stat_msg(name, room_id)
@@ -54,12 +66,7 @@ def join_meeting():
             msg = "The room link is not valid. Try again!"
             #return redirect(url_for('main.index'))
             return render_template("index.html", form=form,  form2=form2, msg=msg)
-
-    else:
-        msg = "The room/name is not valid. Try again!"
-        #return redirect(url_for('main.index'))
-        return render_template("index.html", form=form,  form2=form2, msg=msg)
-
+        '''
 
 
 @main.route('/chat/<room>',  methods=['GET','POST'])
@@ -75,9 +82,11 @@ def chat(room):
     session['room'] = room
     if request.method=='POST' and form.validate_on_submit():
         session['name'] = form.name.data
-        if validate_newroom(room) is True:
+        room_id = validate_newroom(room)
+        if room_id != None:
+            session['room_id'] = room_id
             session['joint'] = "{}.{}".format(room, session['name'])
-            session['guest_stat'] = get_guest_stat_msg(session['name'], room)
+            session['guest_stat'] = get_guest_stat_msg(session['name'], room_id)
             return render_template('room.html', room=room, room_url=room_url)
         else:
             msg = "Are you sure this is the correct room link? This room doesn't exist or not accessible."
@@ -87,11 +96,12 @@ def chat(room):
         return render_template("chooseName.html", form=form, msg=msg)
     elif request.method == 'GET':
         name = session.get('name', '')
-        if name == "" or joint != "{}.{}".format(room, name) or validate_newroom(room) is False:
+        room_id = validate_newroom(room)
+        if name == "" or joint != "{}.{}".format(room, name) or room_id is None:
             return render_template("chooseName.html", form=form, msg="Entering room {}".format(room))
 
         else:
-            session['guest_stat'] = get_guest_stat_msg(name, room)
+            session['guest_stat'] = get_guest_stat_msg(name, room_id)
             return render_template('room.html', room=room, room_url=room_url)
 
 

@@ -3,9 +3,10 @@ from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from datetime import datetime,timezone
 import sqlite3
-from .utils import record_room_create, read_room_create, parse_url
+from .utils import record_room_create, record_event, parse_url
 import time
-from .models import db, Room, CurrentUser
+#from .models import db, Room, CurrentUser
+from .models import *
 
 
 
@@ -27,16 +28,15 @@ def joined(message):
 def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
-    room = session.get('room')
+    room, room_id = session.get('room'), session.get('room_id')
     username = session.get('name')
     ts = datetime.now(timezone.utc).timestamp()
-    #db_file = current_app.config['db_file']
-    #conn = sqlite3.connect(db_file)
     text_ = message['msg']
     #print(ts, room, username, text_)
 
     #write_chat(conn, ts, room, username, text_)
     #emit('message', {'msg': username + ':' + message['msg']}, room=room)
+    record_event(room_id, 'tc', event_details=session.get('sid')[:4])
     emit('message', {'who': username,'when':ts,
                     'msg':text_}, room=room)
 
@@ -53,23 +53,29 @@ def value_changed(message):
 @socketio.on('state update', namespace='/chat')
 def playpause(message):
     ts = datetime.now(timezone.utc).timestamp()
-    room = session.get('room')
+    room, room_id = session.get('room'), session.get('room_id')
     username = session.get('name')
     message['who'] = username
     message['what'] = 'playpause'
-    message['when'] = ts
+    message['when'] = message['ptime']
     #print(message)
+    if message['pstate'] == 1:
+        event_type = 'ws'
+    elif message['pstate'] == 2:
+        event_type = 'wp'
+    record_event(room_id, event_type, event_details=message['ptime'])
     emit('update state', message, room=room, broadcast=True, include_self=False)
 
 @socketio.on('state update speed', namespace='/chat')
 def speedchange(message):
     ts = datetime.now(timezone.utc).timestamp()
-    room = session.get('room')
+    room, room_id = session.get('room'), session.get('room_id')
     username = session.get('name')
     message['who'] = username
     message['what'] = 'speed'
-    message['when'] = ts
+    message['when'] = message['ptime']
     #print(message)
+    record_event(room_id, 'wf', event_details=message['pspeed'])
     emit('update state', message, room=room, broadcast=True, include_self=False)
 
 #'video update'
@@ -119,29 +125,24 @@ def service_launch(service_name):
 
 @socketio.on('connect', namespace='/chat')
 def test_connect():
-    #print('Connect -- sid:',request.sid)
-    #update current user:
     print('in events: session:', session)
-    current_user = CurrentUser(room_id=session.get('room'), sid=request.sid, screenName=session.get('name'))
-    #current_user = CurrentUser(room_id=session.get('room'), sid=request.sid)
+    session['sid'] = request.sid
+    room_id = session.get('room_id')
+    current_user = CurrentUser(room_id=room_id, sid=request.sid, screenName=session.get('name'))
     db.session.add(current_user)
     db.session.commit()
-    room_id = session.get('room')
+
     print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count())
     ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
     print('\nusers_list',ulist)
-
+    record_event(room_id, 'uj', event_details=session['sid'][:4])
     emit('update message', {'msg': session.get('name') + ' joined the room','ulist':ulist}, room=room_id)
 
 @socketio.on('disconnect', namespace='/chat')
 def test_disconnect():
-    #print('client disconnected')
-    #print('Disonnect -- sid:',request.sid)
-    #print(session)
     CurrentUser.query.filter_by(sid=request.sid).delete()
     db.session.commit()
-    room_id = session.get('room')
-    #print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count(),'\nroom:',room_id)
+    room_id = session.get('room_id')
     ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
-    print('users_list:', ulist)
+    record_event(room_id, 'ul', event_details=session['sid'][:4])
     emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room_id)
