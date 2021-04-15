@@ -63,6 +63,8 @@ def playpause(message):
         event_type = 'ws'
     elif message['pstate'] == 2:
         event_type = 'wp'
+    else:
+        event_type = 'wh' #'watching on hold? like, getting ready etc.'
     record_event(room_id, event_type, event_details=message['ptime'])
     emit('update state', message, room=room, broadcast=True, include_self=False)
 

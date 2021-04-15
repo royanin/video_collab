@@ -87,6 +87,7 @@ def record_event(room_id, event_type, event_details=None):
     'wp':'watching paused', 'timstamp'
     'ws':'watching started/resumed', 'timstamp'
     'wf':'watching speed changed', 'new speed'
+    'wh':'watching on hold', 'timestamp' #video play state other than 1 or 2
     'ep':'emoji panel toggled', 'sid'
     'et':'editor timestamp insert used', 'sid'
     'en':'editor username insert used', 'sid'
