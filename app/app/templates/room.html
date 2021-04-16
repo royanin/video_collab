@@ -1,7 +1,7 @@
 {% extends "html_header.html" %}
 {% block meta %}
 {% endblock %}
-{% block title %}ViewNoteChat Room {{ session.room }}{% endblock %}
+{% block title %}ZipSync Room {{ session.room }}{% endblock %}
 {% block head %}
   {{ super() }}
 {% endblock %}
@@ -150,9 +150,9 @@
           }
         }
 
-        //document.getElementById("vidAlert").innerHTML = 'Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!<br>'
-        //$('vidAlert').append('Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!')
-        var msg = 'Hi <strong>{{ session.name }}</strong>, welcome to View-Note-Chat!'
+        //document.getElementById("vidAlert").innerHTML = 'Hi <strong>{{ session.name }}</strong>, welcome to ZipSync!<br>'
+        //$('vidAlert').append('Hi <strong>{{ session.name }}</strong>, welcome to ZipSync!')
+        var msg = 'Hi <strong>{{ session.name }}</strong>, welcome to ZipSync!'
         postRoomLogs(msg);
         document.getElementById("roomURL").select();
 
@@ -296,8 +296,8 @@
                  data-dismiss="alert" aria-label="Close">\
                    <span aria-hidden="true">&times;</span></button></div>')
 
-               //var domain = "meet.ojar-expt.com";
-               var domain = "meet.jit.si";
+               var domain = "meet3.zipsync.us";
+               //var domain = "meet.jit.si";
                var options = {
                    "roomName": "{{ session.room }}",
                    "userInfo": {
