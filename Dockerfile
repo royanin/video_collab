@@ -1,5 +1,6 @@
 FROM python:3.9.2
 COPY ./app /app
+COPY .env .
 EXPOSE 5000
 
 ENV STATIC_URL /app/static

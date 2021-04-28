@@ -8,37 +8,17 @@
 {% block content2 %}
 <div class="container-fluid">
   <div class="p-1 m-2 row"></div>
-  <div class="pb-1 m-1 row">
-    {#<div id='hamburger' class="col-md-1">
-    <div class="dropdown">
-    <button type="button" class="btn btn-outline-secondary dropdown-toggle"
-    id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    <svg viewBox="0 0 100 50" width="40" height="40">
-      <rect y="10" width="100" height="12" rx="4" stroke="#777" stroke-width="5"></rect>
-      <rect y="30" width="100" height="12" rx="4" stroke="#777" stroke-width="5"></rect>
-      <rect y="50" width="100" height="12" rx="4" stroke="#777" stroke-width="5"></rect>
-    </svg>
-    </button>
+  <div class="pb-1 row">
 
-    </div>
-    </div>#}
-
-    <div class="col-md-3">
-      {% include "snippets/menuoptions.html" %}
+    <div class="col-md-3 text-left">
+      <a href="https://zipsync.us" target="_blank" style="color:#7133FF;text-decoration:none;">ZipSync.us</a>
+      {#{% include "snippets/menuoptions.html" %}#}
     </div>
     <div class="col-md-6">
-      {#<div id='vidAlertBox' class="p-2 text-center"><small><em><span id='vidAlert'></span></em></small></div>#}
-      {#<div id="loadNewVideoButton" class="input-group input-group-sm mb-3">
-        <input type="text" id="videoURL" class="form-control input-lg" placeholder='e.g., https://www.youtube.com/watch?v=nykOeWgQcHM'
-        aria-label="New video URL" aria-describedby="basic-addon2">
-        <div class="input-group-append">
-          <button class="btn btn-xs btn-outline-secondary" onclick="loadNewVideo()" type="button">load video</button>
-        </div>
-      </div>#}
     </div>
     <div class="col-md-1">{#<a href="#" onclick="leave_room();">Leave this room</a>#}</div>
     <div id='howtoDiv' class="col-md-2 text-right">
-      <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#howToModal">?</button>
+      <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#howToModal">?</button>
     </div>
   </div>
 
@@ -49,7 +29,7 @@
 <div id="content" class="container-fluid">
     <div id="flex2">
     <div id="c">
-        <button class="btn btn-sm btn-outline-primary" id="jitsiStart" type="button"
+        <button class="btn btn-sm btn-primary" id="jitsiStart" type="button"
         data-toggle="tooltip" data-placement="right" title="Launch video/audio chat">
           CHAT&nbsp;<i class="fas fa-video"></i>
         </button>
@@ -60,7 +40,7 @@
           <input type="text" id="videoURL" class="form-control input-lg" placeholder='e.g., https://www.youtube.com/watch?v=nykOeWgQcHM'
           aria-label="New video URL" aria-describedby="basic-addon2">
           <div class="input-group-append">
-            <button class="btn btn-sm btn-outline-primary" onclick="loadNewVideo()" type="button"
+            <button class="btn btn-sm btn-primary" onclick="loadNewVideo()" type="button"
             data-toggle="tooltip" data-placement="top" title="type in video URL; it will load for everyone"
             style="font-size:0.9em;">LOAD&nbsp;
             <i class="far fa-play-circle"></i></button>
@@ -74,10 +54,10 @@
     </div>
     <div id="e">
         <div class="btn-group float-sm-right" role="group" aria-label="editor buttons">
-          <button class="btn btn-sm btn-outline-primary" id="editorInsert" onclick="tsEditor();" type="button">
+          <button class="btn btn-sm btn-primary" id="editorInsert" onclick="tsEditor();" type="button">
             <i class="fas fa-clock fa-lg"></i>
           </button>
-          <button class="btn btn-sm btn-outline-primary" id="editorToggle" onclick="toggleEditor();" type="button">
+          <button class="btn btn-sm btn-primary" id="editorToggle" onclick="toggleEditor();" type="button">
             WRITE&nbsp;<i class="fas fa-file-alt fa-lg"></i>
           </button>
         </div>
@@ -108,14 +88,14 @@
 
 <div id="minimizedChatClientDiv" class="minChatClient">
   <button id="minimizedChatClientBtn" onclick="maximizeChatClient()" type="button"
-  class="btn btn-lg btn-secondary"><i class="far fa-comments"></i></button>
+  class="btn btn-lg btn-primary"><i class="far fa-comments"></i></button>
 </div>
 <div id="emojiContainer"></div>
 <div id="chatClient" class="chatClient">
   <div  id="chatHead" class="chatHead">
     <div class="text-right">
       <div class="btn-group" role="group" aria-label="First group">
-        <button id="minimizeChatclientBtn" onclick="minimizeClient()" type="button" class="btn btn-sm btn-light">
+        <button id="minimizeChatclientBtn" onclick="minimizeClient()" type="button" class="btn btn-sm btn-primary">
           <strong>&#8212;</strong>
         </button>
       </div>

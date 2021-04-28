@@ -1,19 +1,26 @@
 version: "3.8"
 
 services:
+  db:
+    image: postgres:13.2-alpine
+    restart: always
+    volumes:
+      - video_collab_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: example
+    ports:
+      - 5432:5432
   app:
     build: .
+    restart: always
     ports:
       - "5000:5000"
-
+    depends_on:
+      - db
     labels:
       - "traefik.enable=true"
       - "traefik.backend=flask"
       - "traefik.frontend.rule=${TRAEFIK_FRONTEND_RULE}"
-
-    networks:
-      - web
-      - backend
 
 
   traefik:
@@ -26,12 +33,8 @@ services:
      - "80:80"
      - "443:443"
      #- "8080:8080"
-    networks:
-     - web
 
 
-networks:
-  web:
-    driver: bridge
-  backend:
+volumes:
+  video_collab_data:
     external: true

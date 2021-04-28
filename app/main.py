@@ -1,5 +1,6 @@
 #!/bin/env python
-from app.run_mode import env_var
+#from app.run_mode import env_var
+import os
 from app import create_app, socketio
 
 #import os
@@ -8,8 +9,8 @@ from app import create_app, socketio
 #This is totally hacky -- need to change once more persistence is required.
 #if os.isfile("data/i")
 
-print('debug_opt:',env_var['debug_opt'])
-app = create_app(debug=env_var['debug_opt'])
+print('debug_opt:',os.getenv("debug_opt"))
+app = create_app(debug=os.getenv("debug_opt"))
 
 if __name__ == '__main__':
     socketio.run(app, host="0.0.0.0", port=5000)

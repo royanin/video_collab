@@ -11,13 +11,13 @@
           <div  class="row sidePanel">
             <div class="col-md-6 offset-md-3 text-center">
             <div  class="p-2 m-2">
-              <p class="p-3 m-3">{% include "snippets/side_panel_index.html" %}</p>
+              <p  class="p-3 m-3">{% include "snippets/side_panel_index.html" %}</p>
             <div>
               <form action="{{ url_for('main.new_meeting') }}" method="post" class="form" role="form">
                 <div class="form-group  required"><label class="control-label" for="name"></label>
                   <input class="form-control form-control-sm" id="name" name="name" placeholder="Screen name" required type="text" value="">
                 </div>
-                <input class="btn btn-outline-primary" id="submit" name="submit" type="submit" value="NEW MEETING">
+                <input class="btn btn-primary" id="submit" name="submit" type="submit" value="NEW MEETING">
               </form>
             </div>
             <br>
@@ -30,7 +30,7 @@
                   <input class="form-control form-control-sm" id="name_join_room" name="name_join_room" placeholder="Screen name" required type="text" value="">
                   <input class="form-control form-control-sm" id="url" name="url" placeholder="Room url" required type="text" value="">
                 </div>
-                <input class="btn btn-outline-primary" id="submit" name="submit" type="submit" value="JOIN MEETING">
+                <input class="btn btn-primary" id="submit" name="submit" type="submit" value="JOIN MEETING">
               </form>
             </div>
             </div>

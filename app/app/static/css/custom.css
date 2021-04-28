@@ -23,10 +23,9 @@ Goes with notepad
 */
 
 body {
-    color: #222;
-    font-size: 0.8em;
-    font-family: 'Montserrat', sans-serif;
-
+  color: #222;
+  font-size: 0.9em;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .sidePanel{
@@ -37,7 +36,31 @@ body {
 }
 
 .btn{
+  color: #7133FF;
   font-size: 0.9em;
+}
+
+.btn-outline-primary{color:#7133FF;background-color:transparent;background-image:none;border-color:#7133FF}.btn-outline-primary:hover{color:white;background-color:#7133FF;border-color:#7133FF}
+.btn-outline-primary:focus,.btn-outline-primary.focus{box-shadow:0 0 0 .2rem white}
+.btn-outline-primary.disabled,.btn-outline-primary:disabled{color:#7133FF;background-color:transparent}
+.btn-outline-primary:not(:disabled):not(.disabled):active,.btn-outline-primary:not(:disabled):not(.disabled).active,.show>.btn-outline-primary.dropdown-toggle{color:#fff;background-color:#009a9a;border-color:white}
+.btn-outline-primary:not(:disabled):not(.disabled):active:focus,.btn-outline-primary:not(:disabled):not(.disabled).active:focus,.show>.btn-outline-primary.dropdown-toggle:focus{box-shadow:0 0 0 .2rem #7133FF}
+
+.btn-primary{color:white;background-color:#7133FF;background-image:none;border-color:#7133FF}.btn-primary:hover{color:#7133FF;background-color:white;border-color:#7133FF}
+.btn-primary:focus,.btn-primary.focus{box-shadow:0 0 0 .2rem white}
+.btn-primary.disabled,.btn-primary:disabled{color:#7133FF;background-color:white}
+.btn-primary:not(:disabled):not(.disabled):active,.btn-primary:not(:disabled):not(.disabled).active,.show>.btn-primary.dropdown-toggle{color:##7133FF;background-color:#white;border-color:#7133FF}
+.btn-primary:not(:disabled):not(.disabled):active:focus,.btn-primary:not(:disabled):not(.disabled).active:focus,.show>.btn-primary.dropdown-toggle:focus{box-shadow:0 0 0 .2rem white}
+
+
+
+
+.title-em {
+  color: #7133FF;
+  font-size: 1.1em;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-weight: bold;
 }
 
 .form-control:first-child{
@@ -46,6 +69,22 @@ body {
 .input-group .form-control:first-child, .input-group-append:first-child, .btn:first-child {
   font-size: 0.9em;
 }
+
+
+#brand-title {
+  color: #7133FF;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  font-size: 2.0em;
+}
+
+#brand-subtitle {
+  color: #333;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
 
 #referButton{
   background-color: transparent;

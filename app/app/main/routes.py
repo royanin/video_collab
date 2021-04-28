@@ -1,13 +1,13 @@
 from flask import session, redirect, url_for, render_template, request, current_app
 from . import main
 from .forms import NewMeetingForm, JoinMeetingForm
-import sqlite3, json
+import sqlite3, json, os
 from .utils import record_room_create, parse_url, validate_newname,\
 validate_newroom, get_room_id_from_submitted_url, get_guest_stat_msg
 #from .models import db, Room, CurrentUser
 from .models import *
 import uuid
-from ..run_mode import env_var
+#from ..run_mode import env_var
 
 
 @main.route('/')
@@ -29,7 +29,7 @@ def new_meeting():
         session['room'], session['room_id'] = room, room_id
         session['joint'] = "{}.{}".format(room, name)
         session['guest_stat'] = get_guest_stat_msg(name, room_id)
-        return redirect(url_for('main.chat', room=room, _external = True, _scheme=env_var['http_scheme']))
+        return redirect(url_for('main.chat', room=room, _external = True, _scheme=os.getenv("http_scheme")))
     else:
         msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
         return render_template("index.html", form=form,  form2=form2, msg=msg)
@@ -50,7 +50,7 @@ def join_meeting():
             session['room'], session['room_id'] = room_string, room_id
             session['joint'] = "{}.{}".format(room_string, name)
             session['guest_stat'] = get_guest_stat_msg(name, room_id)
-            return redirect(url_for('main.chat', room=room_string, _external = True, _scheme=env_var['http_scheme']))
+            return redirect(url_for('main.chat', room=room_string, _external = True, _scheme=os.getenv("http_scheme")))
         else:
             msg = "The room/name is not valid. Try again!"
             return render_template("index.html", form=form,  form2=form2, msg=msg)
@@ -61,7 +61,7 @@ def join_meeting():
         if validate_newroom(room_id) is True:
             session['joint'] = "{}.{}".format(room_id, name)
             session['guest_stat'] = get_guest_stat_msg(name, room_id)
-            return redirect(url_for('main.chat', room=room_id, _external = True, _scheme=env_var['http_scheme']))
+            return redirect(url_for('main.chat', room=room_id, _external = True, _scheme=os.getenv("http_scheme")))
         else:
             msg = "The room link is not valid. Try again!"
             #return redirect(url_for('main.index'))
