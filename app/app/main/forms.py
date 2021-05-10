@@ -1,6 +1,6 @@
 #from flask_wtf import Form
 from flask_wtf import FlaskForm
-from wtforms.fields import StringField, SubmitField
+from wtforms.fields import StringField, SubmitField, BooleanField
 from wtforms.validators import Required
 
 
@@ -16,3 +16,10 @@ class JoinMeetingForm(FlaskForm):
     name_join_room = StringField('', validators=[Required()],render_kw={"placeholder": "Screen name"})
     url = StringField('', validators=[Required()],render_kw={"placeholder": "Room url"})
     submit = SubmitField('Join Room')
+
+class CustomRegistrationForm(FlaskForm):
+    """Accepts an email and tos acceptance. No password required"""
+    email = StringField('', validators=[Required()],render_kw={"placeholder": "email"})
+    coupon_code = StringField('',render_kw={"placeholder": "Coupon code if you have one"})
+    tos_ok = BooleanField()
+    submit = SubmitField('Sign up')
