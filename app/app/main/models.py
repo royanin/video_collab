@@ -1,7 +1,15 @@
+from flask_security.models import fsqla_v2 as fsqla
+from flask_security import UserMixin, RoleMixin, SQLAlchemyUserDatastore
 from flask_sqlalchemy import SQLAlchemy
+from flask import current_app
+#from sqlalchemy.ext.hybrid import hybrid_property
 #from ..run_mode import room_string_length
 
 db = SQLAlchemy()
+
+# Setup Flask-Security
+#security = Security(current_app, user_datastore)
+
 
 class Room(db.Model):
     __tablename__ = "roomCreate"
@@ -22,26 +30,44 @@ class Room(db.Model):
     def __repr__(self):
         return '<Room {}>'.format(self.room_string)
 
+# Define models
+fsqla.FsModels.set_db_info(db)
 
-class User(db.Model):
-    __tablename__ = "users"
+class Role(db.Model, fsqla.FsRoleMixin):
+# Define models
+    __tablename__ = "role"
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(), unique=True)
+    description = db.Column(db.String())
+
+class User(db.Model, fsqla.FsUserMixin):
+    __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
-    time_joined = db.Column(db.Integer, nullable=False)
-    user_email = db.Column(db.Text, unique=True, nullable=False)
+    email = db.Column(db.Text, unique=True, nullable=False)
+    active = db.Column(db.Boolean())
+    confirmed_at = db.Column(db.DateTime)
+    fs_uniquifier = db.Column(db.Text, unique=True, nullable=False)
     user_type = db.Column(db.Text, nullable=True) #demo, early-bird, enterprise, family
     auth_route = db.Column(db.Text, nullable=True) #e.g., fb, goog, shiboleth etc.
-    last_login =  db.Column(db.Integer, nullable=True)
-
-
-    def __init__(self, time_joined, email, user_type, auth_route, last_login):
-        self.time_joined = time_joined
-        self.user_email = user_email
-        self.user_type = user_type
-        self.auth_route = auth_route
-        self.last_login = last_login
+    last_login_at = db.Column(db.DateTime, nullable=True)
+    current_login_at = db.Column(db.DateTime, nullable=True)
+    last_login_ip = db.Column(db.Text, nullable=True)
+    current_login_ip = db.Column(db.Text, nullable=True)
+    login_count = db.Column(db.Integer, nullable=True)
+    roles = db.relationship('Role', secondary='roles_users',
+                            backref=db.backref('user', lazy='dynamic'))
 
     def __repr__(self):
         return '<User {}>'.format(self.email)
+
+class RolesUsers(db.Model):
+    __tablename__ = 'roles_users'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'))
+    role_id = db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+
+
 
 class CurrentUser(db.Model):
     __tablename__ = "currentUsers"
@@ -99,3 +125,5 @@ class RoomEvents(db.Model):
 
     def __repr__(self):
         return '<Room event logs for room {}>'.format(self.room_id)
+
+user_datastore = SQLAlchemyUserDatastore(db, User, Role)

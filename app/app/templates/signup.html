@@ -1,0 +1,79 @@
+<!-- extend base layout -->
+{% extends "html_header.html" %}
+{% block meta %}
+{% endblock %}
+{% block title %}Welcome to ZipSync.us!{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content2 %}
+
+<div class="container-fluid">
+  <div  class="col-md-6 offset-md-3  text-center">
+    <p  class="p-3 m-3"></p>
+    <h6>Join ZipSync</h6>
+    <p  class="p-5">Enter your email address to create an account.<br>
+      <small>No password necessary.</small>
+    </p>
+  </div>
+  <div class="row">
+    <div class="col-md-6 offset-md-3  text-center">
+      {{ msg_ }}
+      {% from "custom_macros.html" import render_field_with_bootstrap_errors %}
+            <h3 class="title-em"> Sign up with email</h3>
+            <form action='{{ url_for("main.signup") }}' method="POST" name="custom_register_form" class="form needs-validation">
+              {{ form.hidden_tag() }}
+                {#<div class="form-group">
+                    {{ render_field_with_bootstrap_errors(form.email,maxlength="140", class="form-control",
+                    placeholder="Email",) }}
+                </div>#}
+                <div class="form-row">
+                    <input type="email" class="form-control" id="email"  name="email" placeholder="Email"  required>
+                    <div class="valid-feedback">
+                      Looks good!
+                    </div>
+                    <div class="invalid-feedback">
+                      We need your email to get in touch with you.
+                    </div>
+                </div>
+
+                <div class="p-2 m-2"><a href="#couponCode"
+                  data-toggle="collapse">Click here if you got a coupon code</a></div>
+                <div id="couponCode" class="collapse">
+                  <div class="form-row">
+                    <br>
+                      <input type="coupon_code" class="form-control" id="coupon_code"
+                      name="coupon_code" placeholder="Coupon code" >
+                  </div>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" name="tos_ok" id="tos_ok" required>
+                  <div class="valid-feedback">
+                    Looks good!
+                  </div>
+                  <div class="invalid-feedback">
+                    Cannot proceed without accepting terms.
+                  </div>
+                  <label class="form-check-label" for="tos_ok">
+                    I accept terms and privacy.
+                  </label>
+                </div>
+                <br>
+                <button type="submit" class="btn btn-sm btn-primary" value="save">Sign up</button>
+                {#{% include "accept_tos.html" %}#}
+              {# {{ render_field(register_user_form.submit) }} #}
+            </form>
+            <br>
+          </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 offset-md-3  text-center">
+            <p>Already have an account?&nbsp;<a  style="color:#7133FF;" href="{{ url_for('security.login') }}">Sign in</a>
+              </p>
+             <p><a  href="{{ url_for('security.send_confirmation') }}">Resend confirmation</a></p>
+        </div>
+      </div>
+</div>
+
+
+{% endblock %}

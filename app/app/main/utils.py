@@ -1,10 +1,14 @@
-import sqlite3, json
-from datetime import datetime,timezone
+import sqlite3, json, secrets, hashlib, uuid, bcrypt
+from datetime import datetime, timezone, timedelta
 import random, string
 from urllib.parse import urlparse, parse_qs
-from flask import current_app
+from flask import current_app, url_for
 #from .models import db, Room, CurrentUser, RoomEvents
 from .models import *
+from itsdangerous import BadSignature, SignatureExpired
+from werkzeug.local import LocalProxy
+
+srlzr = LocalProxy(lambda: current_app.config['srlzr'])
 
 '''
 def write_chat(conn, ts, room_id, username, text):
@@ -44,11 +48,131 @@ def read_chat(conn, room_id, limit_=25, timestamp_=datetime.now(timezone.utc).ti
     else:
         return (None, None)
 '''
-def get_guest_stat_msg(name, room_id):
-    ulist_all = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
-    ulist = [ u_ for u_ in ulist_all if u_!= name]
-    num_guests = len(ulist)
-    if num_guests==0:
+def hash_salt_encode(phrase, kind):
+    '''
+    phrase: a plaintext password or an email id
+    kind: "password" or "email"
+    '''
+    #salted_encoded_phrase = (phrase + current_app.config['SECURITY_PASSWORD_SALT']).encode("utf8")
+    #return bcrypt.hashpw(hashlib.sha512(salted_encoded_phrase).hexdigest())
+    if kind == "password":
+        return bcrypt.hashpw(phrase.encode("utf8"), bcrypt.gensalt())
+    elif kind == "email":
+        salted_encoded_phrase = (phrase + current_app.config['SECURITY_PASSWORD_SALT']).encode("utf8")
+        return hashlib.sha512(salted_encoded_phrase).hexdigest()
+
+def check_token(token, max_age=None, return_data=False):
+    #srlzr = current_app.config['srlzr']
+    time_window = (current_app.config['SECURITY_CONFIRM_EMAIL_WITHIN']).split()
+    td = timedelta(**{time_window[1]: int(time_window[0])}) # x units, e.g., 10 minutes
+    max_age = td.seconds + td.days * 24 * 3600
+    user, data = None, None
+    expired, invalid = False, False
+
+    try:
+        data = srlzr.loads(token, salt=current_app.config['SECURITY_PASSWORD_SALT'], max_age=max_age)
+    except SignatureExpired:
+        d, data = srlzr.loads_unsafe(token)
+        expired = True
+    except (BadSignature, TypeError, ValueError):
+        invalid = True
+
+    if data:
+        print('in utils: data from token:', data)
+        user = user_datastore.find_user(fs_uniquifier=data[0])
+
+    expired = expired and (user is not None)
+
+    if return_data:
+        return expired, invalid, user, data
+    else:
+        return expired, invalid, user
+
+def send_confirmation_email(email, fs_uq):
+    print('in send confirmation email')
+    outcome = "success"
+    token = srlzr.dumps([str(fs_uq), hash_salt_encode(email, kind="email")], salt=current_app.config['SECURITY_PASSWORD_SALT'])
+    link = url_for("main.confirm_token", token=token, _external=True)
+    print('link:', link)
+    print('token:', token)
+    """
+    send_mail(
+        config_value("EMAIL_SUBJECT_CONFIRM"),
+        email,
+        "confirmation_instructions",
+        user=user,
+        confirmation_link=link,
+    )
+    """
+    if outcome =="success":
+        return "Please check your email to complete the registration process"
+    else:
+        return "Oops. This is unexpected. Please try again in a bit."
+
+
+def check_email_eligible(email, coupon_code=None):
+    email_tld = email.split(".")[-1]
+    email_domain = email.split("@")[-1]
+
+
+    if coupon_code in current_app.config['COUPON_CODES']:
+        return True, current_app.config['COUPON_CODE_TO_USERTYPE'][coupon_code]
+    elif email_tld in ['edu']:
+        return True, 'd2edu'
+    else:
+        return False, None
+
+def handle_email_signup(email, coupon_code=None):
+    #0. Check if the email is allowed:
+    print('email supplied:', email)
+    #for whatever reason, the user is already registered, but may or may not be confirmed:
+    if user_datastore.find_user(email=email):
+        u_ = user_datastore.find_user(email=email)
+        if u_.confirmed_at==None:
+            fs_uq = u_.fs_uniquifier
+            #resend confirmation email
+            msg_outcome = send_confirmation_email(email, fs_uq)
+            return msg_outcome
+        else:
+            #user registered and confirmed
+            return "You are already registered. Log in to start using ZipSync"
+
+
+    elif not user_datastore.find_user(email=email):
+        user_eligible, user_type = check_email_eligible(email, coupon_code=coupon_code)
+        if  user_eligible == False:
+            #reject -- store the emails and date etc.
+            return "Sorry, ZipSync is growing, but not yet ready for you. We'll email you soon!"
+        else:
+            #register unconfirmed user
+            password = secrets.token_hex(16)
+            hashed_password = hash_salt_encode(password, kind="password")
+            fs_uq = uuid.uuid4().hex
+            user_datastore.create_user(password=hashed_password, confirmed_at=None,
+                email=email, fs_uniquifier=fs_uq, user_type=user_type)
+            db.session.commit()
+
+            #resend confirmation email
+            msg_outcome = send_confirmation_email(email, fs_uq)
+            return msg_outcome
+
+def get_current_users_in_room(room_url):
+    #returns (num_guests, ulist)
+    try:
+        occ_set = set(current_app.redis.smembers('{}_occ'.format(room_url)))
+        ulist = [ str(u, 'utf-8') for u in occ_set ]
+        print('from utils. ulist:', ulist)
+        return len(occ_set), ulist
+    except Exception as e:
+        return 0, []
+
+
+def get_guest_stat_msg(name, room_url):
+    num_guests, ulist = get_current_users_in_room(room_url)
+    if name not in ulist:
+        num_guests += 1
+        ulist.append(name)
+    if num_guests==1:
         guest_stat_msg = "You are the only one in the room"
     else:
         guest_string_ = (", ".join(ulist))
@@ -56,13 +180,13 @@ def get_guest_stat_msg(name, room_id):
             guest_string = guest_string_[:30]+'...'
         else:
             guest_string = guest_string_
-        guest_stat_msg ='{} guests: {}, {}'.format(num_guests+1, name, guest_string)
+        guest_stat_msg ='{} guests: {}'.format(num_guests, guest_string)
 
     return guest_stat_msg
 
-def record_room_create(room_string, room_type='da', room_creator_uid = None,
+def record_room_create(room_string, room_type='d2edu20', room_creator_uid = None,
                         room_state = 'a'):
-    #room_type: 'd2' is demo for 2, 'da' -> demo for any
+    #room_type: 'd2' is demo for 2, 'da' -> demo for any, 'd2edu30': demo for edu with 30 min. time limit
     #room_state: 'a' for active; could be inactive, read-only, secure etc. etc.
     ts = datetime.now(timezone.utc).timestamp()
     new_room = Room(timestamp=ts, room_string=room_string, room_type=room_type,
@@ -70,10 +194,10 @@ def record_room_create(room_string, room_type='da', room_creator_uid = None,
     #print(new_room)
     db.session.add(new_room)
     db.session.commit()
-    return new_room.id
+    return new_room.id, ts
 
 
-def record_event(room_id, event_type, event_details=None):
+def record_event(room, event_type, event_details=None):
     '''
     dictionary for event_type, event_details
     'rc': 'room created',
@@ -95,6 +219,9 @@ def record_event(room_id, event_type, event_details=None):
     '''
     #This is a temporary implementation -- should be written with a buffer?
     ts = datetime.now(timezone.utc).timestamp()
+
+    #Get the room_id from redis:
+    room_id = int(current_app.redis.get('{}_id'.format(room)))
     new_event = RoomEvents(timestamp=ts, room_id = room_id,
                         event_type = event_type, event_details = event_details)
     db.session.add(new_event)
@@ -147,17 +274,18 @@ def parse_url(url):
     except Exception as e:
         return None, None
 
-def get_room_id_from_submitted_url(room_url):
+def clean_url(room_url):
     if room_url[-1]=='/':
         room_url.rstrip('/')
     room_string = room_url.split("/")[-1]
-
+    return room_string
+    '''
     room = Room.query.filter_by(room_string=room_string).first()
     if room != None:
-        return room.room_string, room.id
+        return room.room_string, room.id, room.room_type, room.timestamp
     else:
         return None, None
-
+    '''
 def validate_newname(name):
     '''
     if len(name)>=6 and len(name)<=20 and name.isalnum():
@@ -178,9 +306,9 @@ def validate_newroom(room_string):
     #time_window = 600 for certain room type?
     room = Room.query.filter_by(room_string=room_string).first()
     if room != None:
-        return room.id
+        return room.id, room.room_type, room.timestamp
     else:
-        return None
+        return None, None, None
 
     '''
     if len(room)==32:

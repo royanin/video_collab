@@ -1,0 +1,40 @@
+<!-- extend base layout -->
+{% extends "html_header.html" %}
+{% block meta %}
+{% endblock %}
+{% block title %}Welcome to ZipSync.us!{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content2 %}
+
+<div class="container-fluid">
+  <div  class="col-md-6 offset-md-3  text-center">
+    <p  class="p-3 m-3"></p>
+    <h6>Need to confirm email?</h6>
+    <p  class="p-5">Enter your email address and click on the magic link in the email.<br>
+      <small>You may need to check the spam folder in your inbox.</small>
+    </p>
+  </div>
+  <div class="row">
+    <div class="col-md-6 offset-md-3  text-center">
+      {% from "custom_macros.html" import render_field_with_bootstrap_errors %}
+      <h3 class="title-em">Resend confirmation instructions</h3>
+      <form action="{{ url_for_security('send_confirmation') }}" method="POST" name="send_confirmation_form">
+        {{ send_confirmation_form.hidden_tag() }}
+        {{ render_field_with_bootstrap_errors(send_confirmation_form.email, class="form-control", placeholder="Email address") }}
+
+        <button type="submit" class="btn btn-sm btn-primary" value="save">Get confirmation link</button>
+      </form>
+    </div>
+  </div>
+  <br>
+  <div class="row">
+    <div class="col-md-6 offset-md-3  text-center">
+        <p><a  style="color:#7133FF;" href='{{ url_for("main.signup") }}'>Create a new account</a></p>
+        <p><a  href="{{ url_for_security('login') }}">Login with a link,</a> if you already confirmed your account.</p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

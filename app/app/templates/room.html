@@ -15,6 +15,7 @@
       {#{% include "snippets/menuoptions.html" %}#}
     </div>
     <div class="col-md-6">
+      <div>Room closes in <span id="time"></span> mm:ss</div>
     </div>
     <div class="col-md-1">{#<a href="#" onclick="leave_room();">Leave this room</a>#}</div>
     <div id='howtoDiv' class="col-md-2 text-right">
@@ -660,12 +661,14 @@
                }
 
                function leave_room() {
+                 if (socket){
                    socket.emit('left', {}, function() {
                        socket.disconnect();
-
+                       });
+                 }
                        // go back to the login page
                        window.location.href = "{{ url_for('main.index') }}";
-                   });
+
                }
 
                //Function to load a new video:
@@ -847,6 +850,62 @@
                   <Li title = "emotion 10" >&#x1F60C; </li>
                  </ul> #}
                 */
+
+                function MakeTimer(end, display) {
+                    var diff,
+                        minutes,
+                        seconds;
+                    function timer() {
+                        //console.log({{ session.room_ts }});
+                        // get the number of seconds that have elapsed since
+                        // MakeTimer() was called
+                        diff =  (end - ((Date.now()) / 1000) | 0);
+
+                        //if(diff < 11) call room disconnect/close
+
+                        console.log(diff);
+                        // does the same job as parseInt truncates the float
+                        minutes = (diff / 60) | 0;
+                        seconds = (diff % 60) | 0;
+
+                        if (diff<=0){
+                          console.log('time is up');
+                          console.log([minutes, seconds]);
+                          leave_room();
+                        }
+
+                        minutes = minutes < 10 ? "0" + minutes : minutes;
+                        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                        minutes = minutes < 0 ? "00" : minutes;
+                        seconds = seconds < 0 ? "00" : seconds;
+
+
+                        display.textContent = minutes + ":" + seconds;
+
+                        //if (diff <= 0) {
+                            // add one second so that the count down starts at the full duration
+                            // example 05:00 not 04:59
+                          //  end = Date.now() + 1000;
+                        //}
+                    };
+                    // we don't want to wait a full second before the timer starts
+                    timer();
+                    setInterval(timer, 1000);
+                }
+
+                window.onload = function () {
+                    console.log('In #time');
+                    var display = document.querySelector('#time');
+                    if(display.textContent==''){
+                      display.textContent='00:00';
+                    }
+                    console.log();
+                    var end = {{ session.room_ts }}
+                    MakeTimer(end, display);
+                };
+
+
            </script>
 
 

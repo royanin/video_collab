@@ -1,0 +1,30 @@
+<!-- extend base layout -->
+{% extends "html_header.html" %}
+{% block meta %}
+{% endblock %}
+{% block title %}Welcome to ZipSync.us!{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content2 %}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-6 offset-md-3  text-center">
+      <div><p  class="p-3 m-3">{% include "/snippets/side_panel_index.html" %}</p></div>
+    </div>
+    <div class="col-md-3"></div>
+  </div>
+  <div class="row">
+    <div class="col-md-6 offset-md-3  text-center">
+
+        <h3 class="title-em"> {{ msg }} </h3>
+
+        <br>
+      </div>
+  </div>
+
+</div>
+
+
+{% endblock %}

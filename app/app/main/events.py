@@ -3,7 +3,7 @@ from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from datetime import datetime,timezone
 import sqlite3
-from .utils import record_room_create, record_event, parse_url
+from .utils import record_event, parse_url, get_current_users_in_room
 import time
 #from .models import db, Room, CurrentUser
 from .models import *
@@ -28,15 +28,12 @@ def joined(message):
 def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
-    room, room_id = session.get('room'), session.get('room_id')
+    room = session.get('room')
     username = session.get('name')
     ts = datetime.now(timezone.utc).timestamp()
     text_ = message['msg']
-    #print(ts, room, username, text_)
 
-    #write_chat(conn, ts, room, username, text_)
-    #emit('message', {'msg': username + ':' + message['msg']}, room=room)
-    record_event(room_id, 'tc', event_details=session.get('sid')[:4])
+    record_event(room, 'tc', event_details=session.get('sid')[:4])
     emit('message', {'who': username,'when':ts,
                     'msg':text_}, room=room)
 
@@ -53,7 +50,7 @@ def value_changed(message):
 @socketio.on('state update', namespace='/chat')
 def playpause(message):
     ts = datetime.now(timezone.utc).timestamp()
-    room, room_id = session.get('room'), session.get('room_id')
+    room = session.get('room')
     username = session.get('name')
     message['who'] = username
     message['what'] = 'playpause'
@@ -65,19 +62,19 @@ def playpause(message):
         event_type = 'wp'
     else:
         event_type = 'wh' #'watching on hold? like, getting ready etc.'
-    record_event(room_id, event_type, event_details=message['ptime'])
+    record_event(room, event_type, event_details=message['ptime'])
     emit('update state', message, room=room, broadcast=True, include_self=False)
 
 @socketio.on('state update speed', namespace='/chat')
 def speedchange(message):
     ts = datetime.now(timezone.utc).timestamp()
-    room, room_id = session.get('room'), session.get('room_id')
+    room = session.get('room')
     username = session.get('name')
     message['who'] = username
     message['what'] = 'speed'
     message['when'] = message['ptime']
     #print(message)
-    record_event(room_id, 'wf', event_details=message['pspeed'])
+    record_event(room, 'wf', event_details=message['pspeed'])
     emit('update state', message, room=room, broadcast=True, include_self=False)
 
 #'video update'
@@ -114,8 +111,7 @@ def left(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     leave_room(room)
-    #ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
-    #emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room)
+
     emit('update message', {'msg': session.get('name') + ' has left the room...'}, room=room)
 
 @socketio.on('launched_service', namespace='/chat')
@@ -129,22 +125,26 @@ def service_launch(service_name):
 def test_connect():
     print('in events: session:', session)
     session['sid'] = request.sid
-    room_id = session.get('room_id')
-    current_user = CurrentUser(room_id=room_id, sid=request.sid, screenName=session.get('name'))
-    db.session.add(current_user)
-    db.session.commit()
+    room_url = session.get('room')
 
-    print('num_users: ', CurrentUser.query.filter_by(room_id=room_id).count())
-    ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
-    print('\nusers_list',ulist)
-    record_event(room_id, 'uj', event_details=session['sid'][:4])
-    emit('update message', {'msg': session.get('name') + ' joined the room','ulist':ulist}, room=room_id)
+    #create redis key for the occupants in the room:
+    room_occ_key = "{}_occ".format(room_url)
+    current_app.redis.sadd(room_occ_key, session.get('name'))
+
+    num_guests, ulist = get_current_users_in_room(room_url)
+
+    record_event(room_url, 'uj', event_details=session['sid'][:4])
+    emit('update message', {'msg': session.get('name') + ' joined the room','ulist':ulist}, room=room_url)
 
 @socketio.on('disconnect', namespace='/chat')
 def test_disconnect():
-    CurrentUser.query.filter_by(sid=request.sid).delete()
-    db.session.commit()
+
     room_id = session.get('room_id')
-    ulist = [u.screenName for u in CurrentUser.query.filter_by(room_id=room_id).all()]
-    record_event(room_id, 'ul', event_details=session['sid'][:4])
-    emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room_id)
+    room_url = session.get('room')
+    #for redis
+    room_occ_key = "{}_occ".format(room_url)
+    current_app.redis.srem(room_occ_key, session.get('name')) #make them screennames
+    num_guests, ulist = get_current_users_in_room(room_url)
+
+    record_event(room_url, 'ul', event_details=session['sid'][:4])
+    emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room_url)
