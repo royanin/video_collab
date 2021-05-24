@@ -63,6 +63,18 @@ body {
   font-weight: bold;
 }
 
+.alert-custom {
+  color: #32a852;
+  background-color: #fefefe;
+  font-size: 1.1em;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-weight: bold;
+  position: absolute;
+  z-index: 100;
+  box-shadow: 1px 1px 3px #777;
+}
+
 .form-control:first-child{
   font-size: 0.9em;
 }
@@ -322,6 +334,14 @@ div {
 .ql-toolbar.ql-snow{
   font-family: 'Montserrat', sans-serif;
   font-size: 0.8em;
+  display: none;
+}
+
+#show-timer{
+  display: none;
+}
+
+#dlContentBtn{
   display: none;
 }
 

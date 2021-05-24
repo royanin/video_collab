@@ -17,7 +17,8 @@
             <div>
               <form action="" method="post" class="form" role="form">
                 <div class="form-group  required"><label class="control-label" for="name"></label>
-                  <input class="form-control form-control-sm" id="name" name="name" placeholder="Screen name" required type="text" value="">
+                  <input class="form-control form-control-sm" id="name" name="name" placeholder="Screen name"
+                  required type="text" value="{{ session['name'] }}">
                 </div>
                 <input class="btn btn-primary" id="submit" name="submit" type="submit" value="JOIN ROOM">
               </form>

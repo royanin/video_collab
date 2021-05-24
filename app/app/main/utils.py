@@ -2,11 +2,13 @@ import sqlite3, json, secrets, hashlib, uuid, bcrypt
 from datetime import datetime, timezone, timedelta
 import random, string
 from urllib.parse import urlparse, parse_qs
-from flask import current_app, url_for
+from flask import session, current_app, url_for, flash
 #from .models import db, Room, CurrentUser, RoomEvents
 from .models import *
+from .emails import send_email
 from itsdangerous import BadSignature, SignatureExpired
 from werkzeug.local import LocalProxy
+from flask_security import current_user
 
 srlzr = LocalProxy(lambda: current_app.config['srlzr'])
 
@@ -61,9 +63,12 @@ def hash_salt_encode(phrase, kind):
         salted_encoded_phrase = (phrase + current_app.config['SECURITY_PASSWORD_SALT']).encode("utf8")
         return hashlib.sha512(salted_encoded_phrase).hexdigest()
 
+def generate_token(email, fs_uq):
+    return srlzr.dumps([str(fs_uq), hash_salt_encode(email, kind="email")], salt=current_app.config['SECURITY_PASSWORD_SALT'])
+
 def check_token(token, max_age=None, return_data=False):
     #srlzr = current_app.config['srlzr']
-    time_window = (current_app.config['SECURITY_CONFIRM_EMAIL_WITHIN']).split()
+    time_window = (current_app.config['CONFIRM_EMAIL_WITHIN']).split()
     td = timedelta(**{time_window[1]: int(time_window[0])}) # x units, e.g., 10 minutes
     max_age = td.seconds + td.days * 24 * 3600
     user, data = None, None
@@ -80,6 +85,8 @@ def check_token(token, max_age=None, return_data=False):
     if data:
         print('in utils: data from token:', data)
         user = user_datastore.find_user(fs_uniquifier=data[0])
+        if user.confirmed_at == None:
+            user.confirmed_at = datetime.now(timezone.utc).timestamp()
 
     expired = expired and (user is not None)
 
@@ -88,26 +95,38 @@ def check_token(token, max_age=None, return_data=False):
     else:
         return expired, invalid, user
 
-def send_confirmation_email(email, fs_uq):
-    print('in send confirmation email')
-    outcome = "success"
-    token = srlzr.dumps([str(fs_uq), hash_salt_encode(email, kind="email")], salt=current_app.config['SECURITY_PASSWORD_SALT'])
-    link = url_for("main.confirm_token", token=token, _external=True)
-    print('link:', link)
-    print('token:', token)
-    """
-    send_mail(
-        config_value("EMAIL_SUBJECT_CONFIRM"),
-        email,
-        "confirmation_instructions",
-        user=user,
-        confirmation_link=link,
-    )
-    """
-    if outcome =="success":
-        return "Please check your email to complete the registration process"
+def ret_msg(response, msg_success, msg_failure, default_success="success"):
+    if response == default_success:
+        return msg_success
     else:
-        return "Oops. This is unexpected. Please try again in a bit."
+        return msg_failure
+
+
+
+def send_link(email, fs_uq, link_type_msg):
+    #first check if the user exists,
+    #then send an email (or not) with the same message
+    #"A confirmation email has been sent if the user is registered"
+
+    if not check_last_email_within(email, ts_period=300):
+        #check if user is confirmed
+        token = generate_token(email, fs_uq)
+        link = url_for("main.confirm_token", token=token, _external=True)
+        print('link:', link)
+        print('token:', token)
+        response = send_email(current_app.config['accounts_email'], email, link_type_msg, link)
+
+        if response=="success":
+            flash("Check your email for a magic link to log in")
+            record_last_email_sent(email, 'ml') #ml: magic_link
+        else:
+            flash("Oops. This is unexpected. Please try again in a bit.")
+
+    else:
+        flash("Sometimes it takes a while for the emails to reach. Also, check your spam folder!")
+
+    return
+
 
 
 def check_email_eligible(email, coupon_code=None):
@@ -116,45 +135,73 @@ def check_email_eligible(email, coupon_code=None):
 
 
     if coupon_code in current_app.config['COUPON_CODES']:
+        store_coupon_code(email,  coupon_code = coupon_code) #store the coupon code
         return True, current_app.config['COUPON_CODE_TO_USERTYPE'][coupon_code]
     elif email_tld in ['edu']:
         return True, 'd2edu'
     else:
         return False, None
 
-def handle_email_signup(email, coupon_code=None):
+def store_eoi_email(email, other_details=None):
+    '''Emails for those who want to join'''
+    #check if email exists; else add:
+    eoi_email = ExpressInterest(email, other_details)
+    db.session.add(eoi_email)
+    db.session.commit()
+
+def store_sub_email(email, sub_type=None):
+    '''Emails for those who subscribed to email list. This is for test.
+    Disable it before actual email blasts.'''
+    sub_email = SubscribeList(email, sub_type)
+    db.session.add(sub_email)
+    db.session.commit()
+
+def store_coupon_code(email, coupon_code):
+    '''Emails for those who used a coupon code to join'''
+    cc = CouponUsed(email, coupon_code = coupon_code)
+    db.session.add(cc)
+    db.session.commit()
+
+
+def handle_email_checkin(email, coupon_code=None):
+    #This is unified signin/signup module
     #0. Check if the email is allowed:
     print('email supplied:', email)
     #for whatever reason, the user is already registered, but may or may not be confirmed:
-    if user_datastore.find_user(email=email):
-        u_ = user_datastore.find_user(email=email)
-        if u_.confirmed_at==None:
-            fs_uq = u_.fs_uniquifier
-            #resend confirmation email
-            msg_outcome = send_confirmation_email(email, fs_uq)
-            return msg_outcome
-        else:
-            #user registered and confirmed
-            return "You are already registered. Log in to start using ZipSync"
-
+    u_ = user_datastore.find_user(email=email)
+    if (u_):
+        fs_uq = u_.fs_uniquifier
+        link_type_msg = "Check your email for a magic link to sign in."
+        msg_outcome = send_link(email, fs_uq, link_type_msg=link_type_msg)
+        return msg_outcome
 
     elif not user_datastore.find_user(email=email):
         user_eligible, user_type = check_email_eligible(email, coupon_code=coupon_code)
         if  user_eligible == False:
             #reject -- store the emails and date etc.
-            return "Sorry, ZipSync is growing, but not yet ready for you. We'll email you soon!"
+            if db.session.query(ExpressInterest.id).filter_by(email=email).first() is None:
+                store_eoi_email(email, other_details=None)
+            flash("Thank you for your interest! We will email you when ZipSync is ready for more users.")
+            if db.session.query(SubscribeList.id).filter_by(email=email).first() is None:
+                store_sub_email(email, sub_type=None)
+            #return "Sorry, ZipSync is not yet ready for you. We'll email you soon!"
+            return
         else:
             #register unconfirmed user
             password = secrets.token_hex(16)
             hashed_password = hash_salt_encode(password, kind="password")
             fs_uq = uuid.uuid4().hex
+            preferred_nick=email.split("@")[0]
             user_datastore.create_user(password=hashed_password, confirmed_at=None,
-                email=email, fs_uniquifier=fs_uq, user_type=user_type)
+                email=email, fs_uniquifier=fs_uq, user_type=user_type,
+                preferred_nick=preferred_nick)
             db.session.commit()
 
             #resend confirmation email
-            msg_outcome = send_confirmation_email(email, fs_uq)
+            link_type_msg = "Check your email to confirm your account and sign in."
+            msg_outcome = send_link(email, fs_uq, link_type_msg=link_type_msg)
             return msg_outcome
+
 
 def get_current_users_in_room(room_url):
     #returns (num_guests, ulist)
@@ -189,12 +236,78 @@ def record_room_create(room_string, room_type='d2edu20', room_creator_uid = None
     #room_type: 'd2' is demo for 2, 'da' -> demo for any, 'd2edu30': demo for edu with 30 min. time limit
     #room_state: 'a' for active; could be inactive, read-only, secure etc. etc.
     ts = datetime.now(timezone.utc).timestamp()
+    if current_user.is_authenticated:
+        room_creator_uid = current_user.id
+        room_type = current_user.user_type
     new_room = Room(timestamp=ts, room_string=room_string, room_type=room_type,
                         room_creator_uid = room_creator_uid, room_state = room_state)
     #print(new_room)
     db.session.add(new_room)
     db.session.commit()
     return new_room.id, ts
+
+def get_user_string_auth_stat():
+    if current_user.is_authenticated:
+        user_string = current_user.email
+        if_user_auth = True
+    else:
+        user_string = session.get('sid')
+        if_user_auth = False
+
+    return user_string, if_user_auth
+
+
+def record_current_room_user(room_string):
+    #this function will record when a new user joins a room,
+    #this row will be removed when the user leaves the room or the room expires
+    user_string, if_user_auth = get_user_string_auth_stat()
+    print('in record_current_room_user\n')
+    print(user_string, if_user_auth)
+    if (db.session.query(CurrentUserRoomList).filter(CurrentUserRoomList.room_string==room_string).\
+        filter(CurrentUserRoomList.user_string==user_string).first() is None):
+        current_room_user = CurrentUserRoomList(room_string, user_string, if_user_auth)
+        db.session.add(current_room_user)
+        db.session.commit()
+
+def remove_current_room_user(room_string):
+    user_string, if_user_auth = get_user_string_auth_stat()
+    print('in remove_current_room_user\n')
+    print(user_string, if_user_auth)
+    (db.session.query(CurrentUserRoomList).filter(CurrentUserRoomList.room_string==room_string).\
+        filter(CurrentUserRoomList.user_string==user_string).delete())
+    '''
+    try:
+        (db.session.query(CurrentUserRoomList).filter(CurrentUserRoomList.room_string==room_string).\
+            filter(CurrentUserRoomList.user_string==user_string).first()).delete()
+        db.session.commit()
+    except:
+        pass
+    '''
+
+
+def check_last_email_within(email, ts_period=300): #if emails sent within last 300 seconds
+    time_now = datetime.now(timezone.utc).timestamp()
+    if (db.session.query(LastEmailRecord).filter(LastEmailRecord.email==email).\
+            filter(LastEmailRecord.timestamp>time_now-ts_period).first() is not None):
+        return True
+    else:
+        return False
+
+def record_last_email_sent(email, reason):
+    last_email = db.session.query(LastEmailRecord).filter_by(email=email).first()
+    if not last_email:
+        num_emails_total=1
+        last_email = LastEmailRecord(email=email, last_email_reason=reason,
+                            num_emails_total=num_emails_total)
+        db.session.add(last_email)
+
+    else:
+        print(last_email.id, last_email.email, last_email.timestamp, last_email.num_emails_total)
+        last_email.timestamp = datetime.now(timezone.utc).timestamp()
+        last_email.email_reason=reason
+        last_email.num_emails_total += 1
+
+    db.session.commit()
 
 
 def record_event(room, event_type, event_details=None):
@@ -287,20 +400,11 @@ def clean_url(room_url):
         return None, None
     '''
 def validate_newname(name):
-    '''
-    if len(name)>=6 and len(name)<=20 and name.isalnum():
-        msg_ = "Name change successful."
 
+    if len(name)>=4 and len(name)<=15 and name.isalnum():
+        return True
     else:
-        msg_ = "Acceptable names are 6-20 characters long, and contain letters and numbers only."
-        #name = ''.join(random.choices(string.ascii_lowercase, k=8))
-        name = ""
-    '''
-    if name != "":
-        msg_ = "Name change successful."
-    else:
-        msg_ = "Let's try again. Shall we?"
-    return name, msg_
+        return False
 
 def validate_newroom(room_string):
     #time_window = 600 for certain room type?
@@ -309,10 +413,3 @@ def validate_newroom(room_string):
         return room.id, room.room_type, room.timestamp
     else:
         return None, None, None
-
-    '''
-    if len(room)==32:
-        return True
-    else:
-        return False
-    '''

@@ -7,20 +7,17 @@
 {% endblock %}
 {% block content2 %}
 <div class="container-fluid">
-  <div class="p-1 m-2 row"></div>
-  <div class="pb-1 row">
+  <!--<div class="p-1 m-2 row"></div>-->
+  <div class="p-1 row">
 
-    <div class="col-md-3 text-left">
+    <div class="col-sm-3 text-left">
       <a href="https://zipsync.us" target="_blank" style="color:#7133FF;text-decoration:none;">ZipSync.us</a>
-      {#{% include "snippets/menuoptions.html" %}#}
     </div>
-    <div class="col-md-6">
-      <div>Room closes in <span id="time"></span> mm:ss</div>
-    </div>
-    <div class="col-md-1">{#<a href="#" onclick="leave_room();">Leave this room</a>#}</div>
-    <div id='howtoDiv' class="col-md-2 text-right">
-      <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#howToModal">?</button>
-    </div>
+    <div class="col-sm-4 offset-sm-5">
+        <span id="show-timer" class="text-center">Room closes in <span id="time"></span></span>
+      <span id='howtoDiv' class="float-right">
+        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#howToModal">?</button>
+      </span>
   </div>
 
 </div>
@@ -38,7 +35,7 @@
     </div>
     <div id="d">
         <div id="loadNewVideoButton" class="input-group input-group-sm pr-4 pl-4">
-          <input type="text" id="videoURL" class="form-control input-lg" placeholder='e.g., https://www.youtube.com/watch?v=nykOeWgQcHM'
+          <input type="text" id="videoURL" class="form-control input-lg" placeholder='Copy paste Youtube URL: e.g., https://www.youtube.com/watch?v=nykOeWgQcHM'
           aria-label="New video URL" aria-describedby="basic-addon2">
           <div class="input-group-append">
             <button class="btn btn-sm btn-primary" onclick="loadNewVideo()" type="button"
@@ -47,7 +44,7 @@
             <i class="far fa-play-circle"></i></button>
           </div>
         </div>
-        <small class="pl-4">Copy paste Youtube URL to load video</small><br>
+        <!--<small class="pl-4">Copy paste Youtube URL to load video</small><br>-->
         <div class="p-2 m-2" id="vidBox">
           <div id="player" class="player"></div>
         </div>
@@ -55,6 +52,9 @@
     </div>
     <div id="e">
         <div class="btn-group float-sm-right" role="group" aria-label="editor buttons">
+          <button class="btn btn-sm btn-primary" id="dlContentBtn" onclick="dlContent();" type="button">
+            <i class="fas fa-download fa-lg"></i>
+          </button>
           <button class="btn btn-sm btn-primary" id="editorInsert" onclick="tsEditor();" type="button">
             <i class="fas fa-clock fa-lg"></i>
           </button>
@@ -223,8 +223,36 @@
           editor = launchEditor(name_, room_);
           //console.log('editor:', editor);
 
+          function destroyClickedElement(event){
+              document.body.removeChild(event.target);
+          }
+
+          function dlContent(){
+
+            quill = window.binding.quill;
+            var quillContent = quill.root;
+            quillContent.id = "quill-content";
+            saveHTML = quillContent.innerHTML;
+            var saveHTMLAsBlob = new Blob([saveHTML], {type:"text/plain"});
+            var saveHTMLAsURL = window.URL.createObjectURL(saveHTMLAsBlob);
+            console.log(saveHTML);
+
+            var fileNameToSaveAs = 'ZipSync-{{ session.room }}.html';
+            console.log(fileNameToSaveAs);
+
+            var downloadLink = document.createElement("a");
+            downloadLink.download = fileNameToSaveAs;
+            downloadLink.innerHTML = "Download File";
+            downloadLink.href = saveHTMLAsURL;
+            downloadLink.onclick = destroyClickedElement;
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+
+            downloadLink.click();
+          }
+
+
           function tsEditor(){
-            console.log('binding:', window.binding);
             quill = window.binding.quill;
             quill.focus();
             if(embedApi){
@@ -244,16 +272,14 @@
             $("#editor2").toggle();
             $(".ql-toolbar.ql-snow").toggle();
             $("#editorInsert").toggle();
+            $("#dlContentBtn").toggle();
             $(".gutter").show();
             /*var x = document.getElementById("editor2");
             var y = document.getElementById("editorInsert");
             if (x.style.display!=="block"){
-              console.log('in toggleEditor if');
               x.style.display==="block";
               y.style.display==="block";
             } else {
-              console.log('in toggleEditor else');
-              console.log(x.style.display);
               x.style.display==="none";
               y.style.display==="none"
             }*/
@@ -380,20 +406,15 @@
                    tag.src = "https://www.youtube.com/iframe_api";  //for youtube
                  }
                  else if (vtype=='pt') {
-                   console.log('downloading panoptp js');
                    tag.src = "https://developers.panopto.com/scripts/embedapi.min.js"; //for panopto
                  }
-                 console.log({vtype, videoId});
 
                  var firstScriptTag = document.getElementsByTagName('script')[0];
                  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 
-                 console.log('in videoLoader');
                  function onIframeAPIReady(vtype, videoId) {
-                   console.log('in onIframeAPIReady');
                    if(vtype=='yt'){
-                     console.log('creating youtube player');
                      embedApi = new YT.Player('player', {
                        width: '100%',
                        //height: '390',
@@ -404,7 +425,6 @@
                      });
                    }
                    else if(vtype=='pt'){
-                     console.log('creating panopto player');
                      embedApi = new EmbedApi("player", {
                          width: "100%",
                          serverName: videoId[0],
@@ -447,31 +467,22 @@
                    else{
                      var guestStatMsg = numGuests+' guests: <strong>'+ulist.join(", ").substring(0,25)+'</strong>';
                    }
-                   console.log(' guestStatMsg', guestStatMsg);
                    document.getElementById("roomGuests").innerHTML = "<small>"+guestStatMsg+"</small>"
                    //$("#roomGuests").html("<small>"+guestStatMsg+"</small>");
-                   console.log(ulist);
                }
 
                 //SocketIO segment
                 var socket;
                 $(document).ready(function(){
-                    //console.log(window.location.protocol);
                     //socket = io.connect('http://' + document.domain + ':' + location.port + '/chat', {
                     socket = io.connect(window.location.protocol  + '//' + document.domain + ':' + location.port + '/chat', {
                       'sync disconnect on unload': true }
                     );
                     socket.on('connect', function() {
-                        console.log(socket.id);
-                        console.log(socket.io.engine.id);
                         socket.emit('joined', {});
                     });
 
                     socket.on('status', function(data) {
-                        //something about loading videos:
-                        //console.log('ulist:', data['ulist']);
-                        //guestStats(data['ulist']);
-
                         postRoomLogs(data['msg']);
                         if (embedApi) {
                           var vidURL = embedApi.getVideoUrl();
@@ -493,9 +504,7 @@
                     socket.on('update message', function(data) {
                       //document.getElementById("vidAlert").innerHTML = data['msg'];
                       //$('vidAlert').append(data['msg']+'<br>');
-                      console.log('ulist:', data['ulist']);
                       if (typeof data['ulist']!="undefined"){
-                        console.log('ulist:', data['ulist']);
                         postRoomLogs(data['msg']);
                       }
                       guestStats(data['ulist']);
@@ -529,9 +538,6 @@
                          else {
                            pstate = embedApi.getState(); // this is for Panopto
                          }
-                         console.log('in update state');
-                         console.log(pstate);
-                         console.log(msg);
                          if (msg['pstate']!== pstate){
                              if (msg['pstate']===2){
                                  embedApi.pauseVideo();
@@ -581,7 +587,6 @@
                 }); //closing socket function
 
                 //submit a post request on an action:
-                //console.log($('#chat').scrollTop($('#chat')[0].scrollHeight));
 
 
                  //The API will call this function when the iframe is ready
@@ -598,8 +603,6 @@
                {
                    // The video has successfully been loaded by onPanoptoIframeReady
                    //embedApi.loadVideo();
-                   console.log('in onVideoReady');
-                   console.log(embedApi);
                    embedApi.pauseVideo();
 
 
@@ -625,7 +628,6 @@
                }
                function onPlaybackRateChange()
                {
-                   console.log('in onPlaybackRateChange');
                    var currentState = getCompleteState();
                    currentStateMessage(currentState);
                    socket.emit('state update speed', currentState);
@@ -633,9 +635,6 @@
 
 
                function getCompleteState(){
-                 console.log('in getCompleteState');
-                 //console.log(embedApi.getPlayerState());
-                 //console.log(embedApi.getState());
                  if (typeof embedApi.getPlayerState == 'function'){
                    pstate = embedApi.getPlayerState(); //this is for youtube
                  }
@@ -674,7 +673,6 @@
                //Function to load a new video:
                function loadNewVideo(){
                  videoURL = $('#videoURL').val();
-                 console.log(videoURL);
                  $.ajax({
                    url: "{{ url_for('main.getURL') }}",
                    data: JSON.stringify({'url': videoURL}),
@@ -699,6 +697,8 @@
                      }
                    });
                }
+
+
 
 
             //Function to load chat and format it based on the clientname:
@@ -856,21 +856,21 @@
                         minutes,
                         seconds;
                     function timer() {
-                        //console.log({{ session.room_ts }});
                         // get the number of seconds that have elapsed since
                         // MakeTimer() was called
                         diff =  (end - ((Date.now()) / 1000) | 0);
 
                         //if(diff < 11) call room disconnect/close
-
-                        console.log(diff);
                         // does the same job as parseInt truncates the float
                         minutes = (diff / 60) | 0;
                         seconds = (diff % 60) | 0;
 
+                        if (diff<=300){
+                          //5-minute warning before the room closes
+                          $("#show-timer").show();
+                        }
+
                         if (diff<=0){
-                          console.log('time is up');
-                          console.log([minutes, seconds]);
                           leave_room();
                         }
 

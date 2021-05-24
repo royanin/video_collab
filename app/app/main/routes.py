@@ -1,14 +1,16 @@
-from flask import session, redirect, url_for, render_template, request, current_app
+from flask import session, redirect, url_for, render_template, request, current_app, flash
 from . import main
-from .forms import NewMeetingForm, JoinMeetingForm, CustomRegistrationForm
-import sqlite3, json, os, secrets
+from .forms import NewMeetingForm, JoinMeetingForm, CustomRegistrationForm,CustomLoginForm,\
+CustomConfirmForm
+import sqlite3, json, os, secrets, random
 from .utils import record_room_create, parse_url, validate_newname,\
 validate_newroom, clean_url, get_guest_stat_msg,\
-handle_email_signup, check_token
+handle_email_checkin, check_token, record_current_room_user,\
+remove_current_room_user
 from .models import *
 import uuid
 from flask_security.forms import RegisterForm
-from flask_security.confirmable import confirm_user
+#from flask_security.confirmable import confirm_user
 from flask_security import login_user, auth_required, current_user
 
 #from ..run_mode import env_var
@@ -42,50 +44,63 @@ def delete():
         #print(user_registered(user=u_))
         db.session.commit()
 '''
+@main.route('/signin', methods=['GET', 'POST'])
+def signin():
+    form = CustomLoginForm(request.form)
+    if request.method=='POST' and form.validate_on_submit():
+        email = form.email.data
+        #Check if we can register this email. Send confirmation email if so etc.
+        msg_ = handle_email_checkin(email, coupon_code=None)
+        return render_template("response.html", msg=msg_)
+
+    elif request.method=='POST' and not form.validate_on_submit():
+        error = "Form did not validate. Please try again!"
+        return render_template("login.html", form=form, error=error)
+
+    else:
+        if current_user.is_authenticated:
+            flash("You are already logged in!")
+            return redirect(url_for('main.index'))
+        #print(print('GET request'))
+        return render_template("login.html", form=form)
+
+
 @main.route('/signup', methods=['GET', 'POST'])
 def signup():
-    #form = CustomRegistrationForm(request.form, meta={'csrf': False})
     form = CustomRegistrationForm(request.form)
     if request.method=='POST' and form.validate_on_submit():
-        #print('form validated')
-        #print(request.form)
         email = form.email.data
         coupon_code = form.coupon_code.data
         #Check if we can register this email. Send confirmation email if so etc.
-        msg_ = handle_email_signup(email, coupon_code=coupon_code)
-        return render_template("response_signup.html", msg=msg_)
+        msg_ = handle_email_checkin(email, coupon_code=coupon_code)
+        return render_template("response.html", msg=msg_)
 
     elif request.method=='POST' and not form.validate_on_submit():
-        #print(request.form)
-        #print(print('form did not validate'))
-        msg_ = "Form did not validate. Please try again!"
-        return render_template("signup.html", form=form, msg=msg_)
+        error = "Form did not validate. Please try again!"
+        return render_template("signup.html", form=form, error=error)
 
     else:
-        msg_=""
-        #print(print('GET request'))
-        return render_template("signup.html", form=form, msg=msg_)
+        if current_user.is_authenticated and current_user.confirmed_at!=None:
+            flash("You are already logged in!")
+            return redirect(url_for('main.index'))
+        return render_template("signup.html", form=form)
 
 @main.route('/confirm_token/<token>')
 def confirm_token(token):
     expired, invalid, user, data = check_token(token, return_data=True)
     if invalid:
-        msg_ = "Invalid token"
-        return render_template("response_signup.html", msg=msg_)
+        flash("Invalid token")
+        return render_template("response.html")
 
     elif expired and (not invalid):
-        msg_ = "Token expired. Resend confirmation?"
-        return render_template("response_signup.html", msg=msg_)
+        flash("Token expired. Resend link?")
+        return render_template("response.html")
 
     elif (not invalid) and user:
         #confirm user and login user:
-        confirm_user(user)
         db.session.commit()
-
         login_user(user, remember=True, authn_via=['email'])
-        #user_datastore.commit()
-        #db.session.commit()
-
+        flash("Token confirmed. You are signed in.")
         return redirect(url_for('main.index'))
 
     #print(expired, invalid, user, data)
@@ -97,30 +112,13 @@ def confirm_token(token):
 #@auth_required()
 def index():
     if current_user.is_authenticated:
-        suggested_name = (current_user.email).split('@')[0]
+        suggested_name = current_user.preferred_nick
     else:
-        suggested_name = None
+        suggested_name = "user{}".format(random.randint(100, 999))
     form = NewMeetingForm(request.form, meta={'csrf': False})
     form2 = JoinMeetingForm(request.form, meta={'csrf': False})
     return render_template('index.html', form=form, form2=form2, msg='', suggested_name=suggested_name)
 
-
-#@main.route('/register', methods=['GET', 'POST'])
-#def register():
-    '''
-    if not user_datastore.find_user(email="royanin@gmail.com"):
-        #uid = uuid.uuid4()
-        user_datastore.create_user(password=secrets.token_hex(16), email="royanin@gmail.com")
-    db.session.commit()
-    '''
-    '''
-    register_user_form = RegisterForm()
-    if request.method=='POST':
-        print(request.form)
-        return render_template('/security/register_user.html', register_user_form=register_user_form)
-    else:
-        return render_template('/security/register_user.html', register_user_form=register_user_form)
-    '''
 @main.route('/new_meeting', methods=['POST'])
 #@auth_required()
 def new_meeting():
@@ -129,15 +127,29 @@ def new_meeting():
     if form.validate_on_submit():
         name = form.name.data
         session['name'] = name
-        u = uuid.uuid4()
-        room = u.hex
         try:
             if current_user.is_authenticated:
                 room_type=current_app.config['usertype_to_roomtype'][current_user.user_type]
+                if name != current_user.preferred_nick:
+                    if validate_newname(name):
+                        current_user.preferred_nick=name
+                        db.session.add(current_user)
+                        db.session.commit()
+                        flash("Name change successful.")
+                    else:
+                        flash("A screen name can have letters and numbers only; 4-15 characters long")
+                        return render_template("index.html", form=form,  form2=form2)
+                #now we can create a room
+                u = uuid.uuid4()
+                room = u.hex
+
             else:
-                room_type='d2edu'
+                #room_type='d2edu'
+                flash("You need an account before you can create a room")
+                return redirect(url_for("signup")) #redirect user to sign up before creating room
         except Exception as e:
             room_type='d2edu'
+
         room_id, ts = record_room_create(room, room_type=room_type)
         room_alive_seconds = current_app.config['room_alive_dict'][room_type]
         #store the room_id in redis, and not as a client session variable!
@@ -150,13 +162,13 @@ def new_meeting():
         session['guest_stat'] = get_guest_stat_msg(name, room)
         return redirect(url_for('main.chat', room=room, _external = True, _scheme=os.getenv("http_scheme")))
     else:
-        msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
-        return render_template("index.html", form=form,  form2=form2, msg=msg)
+        flash("Something went wrong. Try again?")
+        return render_template("index.html", form=form,  form2=form2)
 
 
 @main.route('/join_meeting', methods=['POST'])
 def join_meeting():
-    form = NewMeetingForm(request.form, meta={'csrf': False})
+    #form = NewMeetingForm(request.form, meta={'csrf': False})
     form2 = JoinMeetingForm(request.form, meta={'csrf': False})
 
     if form2.validate_on_submit():
@@ -168,8 +180,9 @@ def join_meeting():
         return redirect(url_for('main.chat', room=room_string, _external = True, _scheme=os.getenv("http_scheme")))
 
     else:
-        msg = "The room/name is not valid. Try again!"
-        return render_template("index.html", form=form,  form2=form2, msg=msg)
+        flash("The room/name is not valid. Try again!")
+        return redirect(url_for('main.index'))
+        #return render_template("index.html", form=form,  form2=form2, msg=msg)
 
 
 @main.route('/chat/<room>',  methods=['GET','POST'])
@@ -194,33 +207,37 @@ def chat(room):
             print(room_alive_seconds)
             session['joint'] = "{}.{}".format(room, session['name'])
             session['guest_stat'] = get_guest_stat_msg(session['name'], room)
-            #return render_template('room.html', room=room, room_url=room_url)
             return render_template('room.html', room=room, room_url=room_url)
         else:
-            msg = "Are you sure this is the correct room link? This room doesn't exist/expired/too full."
-            return render_template("chooseName.html", form=form, msg=msg)
+            #bad room id
+            flash("Please check the room link. This room doesn't exist/expired/too full.")
+            return redirect(url_for('main.index'))
     elif request.method=='POST' and not(form.validate_on_submit()):
         msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
+        #change: return redirect to /chat/<room> instead?
         return render_template("chooseName.html", form=form, msg=msg)
     elif request.method == 'GET':
-        name = session.get('name', '')
+        if current_user.is_authenticated:
+            name = current_user.preferred_nick
+        else:
+            name = session.get('name', '')
+
+        print('name is', name)
         room_id, room_type, ts = validate_newroom(room)
         print(current_app.config['room_cap_dict'])
         #get the number of guests
         num_guests = len(current_app.redis.smembers('{}_occ'.format(room)))
         num_allowed_guests = current_app.config['room_cap_dict'][room_type]
         if (num_guests >= num_allowed_guests) or room_id is None:
-            msg = "Are you sure this is the correct room link? This room doesn't exist/expired/too full."
-            #print(num_guests, num_allowed_guests, msg)
-            return render_template("response_signup.html", msg=msg)
-            #return render_template("chooseName.html", form=form, msg=msg)
+            flash("Please check the room link. This room doesn't exist/expired/too full.")
+            return redirect(url_for('main.index'))
 
         elif name == "" or joint != "{}.{}".format(room, name):
+            #change: return redirect to /chat/<room> instead?
             return render_template("chooseName.html", form=form, msg="Entering room {}".format(room))
 
         else:
             session['guest_stat'] = get_guest_stat_msg(name, room)
-            #return render_template('room.html', room=room, room_url=room_url)
             return render_template('room.html', room=room, room_url=room_url)
 
 

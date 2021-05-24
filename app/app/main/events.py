@@ -1,9 +1,11 @@
 from flask import session, current_app, request
+from flask_security import current_user
 from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from datetime import datetime,timezone
 import sqlite3
-from .utils import record_event, parse_url, get_current_users_in_room
+from .utils import record_event, parse_url, get_current_users_in_room,\
+record_current_room_user, remove_current_room_user
 import time
 #from .models import db, Room, CurrentUser
 from .models import *
@@ -123,14 +125,18 @@ def service_launch(service_name):
 
 @socketio.on('connect', namespace='/chat')
 def test_connect():
-    print('in events: session:', session)
     session['sid'] = request.sid
     room_url = session.get('room')
 
+    print('in events: session:', session)
+
     #create redis key for the occupants in the room:
     room_occ_key = "{}_occ".format(room_url)
-    current_app.redis.sadd(room_occ_key, session.get('name'))
+    #this will have all current authenticated and guest users in list
+    record_current_room_user(room_url)
 
+    #keep all room guests by room name:
+    current_app.redis.sadd(room_occ_key, session.get('name'))
     num_guests, ulist = get_current_users_in_room(room_url)
 
     record_event(room_url, 'uj', event_details=session['sid'][:4])
@@ -144,7 +150,14 @@ def test_disconnect():
     #for redis
     room_occ_key = "{}_occ".format(room_url)
     current_app.redis.srem(room_occ_key, session.get('name')) #make them screennames
+    #record current user's removal from the room in the current_room_user table
+    remove_current_room_user(room_url)
+
     num_guests, ulist = get_current_users_in_room(room_url)
+    if num_guests == 0:
+        #remove the room from current room list:
+        current_app.redis.srem('room_list', room_url)
+        #remove the room cretor from current room creator list:
 
     record_event(room_url, 'ul', event_details=session['sid'][:4])
     emit('update message', {'msg': session.get('name') + ' has left the room.','ulist':ulist}, room=room_url)

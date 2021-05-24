@@ -25,41 +25,20 @@ if not database_exists(engine.url):
 
 
 #Create all these tables:
-try:
-    Room.__table__.create(engine)
-except Exception as e:
-    pass
+table_list = [Role, User, RolesUsers, Room, RoomEvents, VideoLoaded,
+ExpressInterest, CouponUsed, SubscribeList, LastEmailRecord, CurrentUserRoomList]
 
+for table_ in table_list:
+    try:
+        table_.__table__.create(engine)
+    except Exception as e:
+        pass
 
+"""
+#to speifically create a table:
 try:
     Role.__table__.create(engine)
 except Exception as e:
     pass
 
-try:
-    User.__table__.create(engine)
-except Exception as e:
-    pass
-
-try:
-    RolesUsers.__table__.create(engine)
-except Exception as e:
-    print(e)
-    pass
-
-try:
-    CurrentUser.__table__.create(engine)
-except Exception as e:
-    pass
-try:
-    RoomEvents.__table__.create(engine)
-except Exception as e:
-    pass
-try:
-    VideoLoaded.__table__.create(engine)
-except Exception as e:
-    pass
-
-#if not user_datastore.find_user(email="royanin@gmail.com"):
-#        user_datastore.create_user(email="royanin@gmail.com")
-#db.session.commit()
+"""

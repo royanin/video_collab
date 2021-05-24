@@ -23,3 +23,13 @@ class CustomRegistrationForm(FlaskForm):
     coupon_code = StringField('',render_kw={"placeholder": "Coupon code if you have one"})
     tos_ok = BooleanField()
     submit = SubmitField('Sign up')
+
+class CustomLoginForm(FlaskForm):
+    """Accepts an email. No password required"""
+    email = StringField('', validators=[Required()],render_kw={"placeholder": "email"})
+    submit = SubmitField('Sign in')
+
+class CustomConfirmForm(FlaskForm):
+    """Accepts an email. No password required"""
+    email = StringField('', validators=[Required()],render_kw={"placeholder": "email"})
+    submit = SubmitField('Send confirmation link')    

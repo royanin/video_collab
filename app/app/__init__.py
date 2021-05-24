@@ -25,8 +25,7 @@ POSTGRES_conn = 'postgresql://{}:{}@{}:{}/{}'.format(os.getenv("POSTGRES_USER"),
     os.getenv("POSTGRES_PASSWORD"), os.getenv("POSTGRES_HOST"), os.getenv("POSTGRES_PORT"),
     os.getenv("POSTGRES_DB"))
 
-#from .main.models import db, user_datastore, User, Role, CurrentUser,  RoomEvents
-from .main.models import db, user_datastore, CurrentUser#, User, Role, CurrentUser,  RoomEvents
+from .main.models import db, user_datastore#, CurrentUser, User, Role, CurrentUser,  RoomEvents
 migrate = Migrate()
 
 mail = Mail()
@@ -58,10 +57,11 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
     #app.config['SECURITY_TOKEN_MAX_AGE'] = '600 seconds'
     app.config['SECURITY_LOGIN_WITHIN'] = '600 seconds'
     app.config['SECURITY_DEFAULT_REMEMBER_ME'] = True
-    app.config['SECURITY_CONFIRMABLE'] = True
-    app.config['SECURITY_CONFIRM_EMAIL_WITHIN'] = '30 minutes'
+    #app.config['SECURITY_CONFIRMABLE'] = True
+    #app.config['SECURITY_CONFIRM_EMAIL_WITHIN'] = '30 minutes'
     #app.config['SECURITY_LOGIN_USER_TEMPLATE'] = "/security/send_login.html"
-    #app.config['SECURITY_LOGIN_URL']="/send_login"
+    app.config['CONFIRM_EMAIL_WITHIN'] = '30 minutes'
+    app.config['SECURITY_LOGIN_URL']="/signin"
     app.config['SECURITY_PASSWORD_SALT']=secrets.token_hex(16)
     #app.config['SECURITY_TOTP_SECRETS'] = {1: os.getenv('secret_key')}
     #app.config['SECURITY_TOTP_ISSUER'] = "ZipSync"
@@ -72,12 +72,12 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
     app.config['COUPON_CODE_TO_USERTYPE'] =  json.loads(os.getenv("COUPON_CODE_TO_USERTYPE"))
 
     app.config['room_alive_dict'] = {'d2edu':600, 'da':7200, 'd2long':2700,
-                    'dmed':1500, 'dmedlong':3600} #in seconds
+                    'dmed':1500, 'dmed_long':3600} #in seconds
     app.config['room_access_lifespan_dict'] = {'d2edu':1600, 'da':864000,
-                    'd2long':864000, 'dmed':864000, 'dmedlong':864000}
+                    'd2long':864000, 'dmed':864000, 'dmed_long':864000}
     #this doesn't really work because how the room_alive_dict is enforced
     app.config['room_cap_dict'] = {'d2edu':2, 'da': 8, 'd2long': 2,
-                        'dmed':5, 'dmedlong':5} #in number of connections
+                        'dmed':5, 'dmed_long':5} #in number of connections
 
     app.config['usertype_to_roomtype'] = { k:k for k in app.config['room_alive_dict'].keys()}
     app.config['usertype_to_roomtype'][None] = 'd2edu'
@@ -86,12 +86,17 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
     app.register_blueprint(main_blueprint)
 
     #MAIL_config:
+    app.config['accounts_email'] = "accounts@zipsync.us"
     app.config['MAIL_SERVER']=os.getenv("MAIL_SERVER")
-    app.config['MAIL_PORT']=587 #os.getenv("MAIL_PORT")
+    app.config['MAIL_PORT']=os.getenv("MAIL_PORT")
     app.config['MAIL_USE_TLS']=(os.getenv("MAIL_USE_TLS") == 'true')
     app.config['MAIL_USE_SSL']=(os.getenv("MAIL_USE_SSL") == 'true')
-    app.config['MAIL_USERNAME']=os.getenv("MAIL_USERNAME")
-    app.config['MAIL_PASSWORD']=os.getenv("MAIL_PASSWORD")
+    app.config['MAIL_SENDER']=os.getenv("MAIL_SENDER")
+    app.config['MAIL_DEFAULT_SENDER']=os.getenv("MAIL_DEFAULT_SENDER")
+    app.config['MAIL_REPLYTO']=os.getenv("MAIL_REPLYTO")
+    app.config['MAIL_USERNAME']=os.getenv("SG_SMTP_USERNAME") #for smtp
+    app.config['MAIL_PASSWORD']=os.getenv("SG_SMTP_PASSWORD") #for smtp
+    app.config['SG_MAIL_API_KEY']=os.getenv("SG_API_KEY")
 
 
     socketio.init_app(app, async_mode='gevent',
@@ -101,11 +106,8 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
 
 
     app.redis = Redis.from_url(app.config['REDIS_URL'])
-    app.task_queue = rq.Queue('microblog-tasks', connection=app.redis)
+    app.task_queue = rq.Queue('app-tasks', connection=app.redis)
 
-    #from .main.models import db, User, Role, CurrentUser,  RoomEvents
-
-    #db = SQLAlchemy(app)
     db.init_app(app)
     migrate.init_app(app, db)
 
@@ -118,23 +120,7 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
 
     @app.before_first_request
     def init_db():
-        try:
-            CurrentUser.__table__.drop(db.engine)
-        except Exception:
-                pass
-        #CurrentUser.__table__.create(db.engine)
-
-
-    '''
-    from .main.models import CurrentUser
-
-    try:
-        CurrentUser.__table__.drop(db.enginee)
-    except Exception:
         pass
-    CurrentUser.__table__.create(db.engine)
-    '''
-
 
     mail.init_app(app)
 

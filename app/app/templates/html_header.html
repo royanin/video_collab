@@ -71,10 +71,30 @@
     <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
     <script src="/static/js/emojipanel.js" crossorigin="anonymous"></script>
     <script defer src="/static/js/all.js"></script>
+    <script src="/static/js/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 
     {% endblock %}
 </head>
 <body>
+    <div class="container-fluid">
+      <div  class="row">
+        <div class="col-sm-6 offset-sm-3 text-center">
+          {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="alert alert-sucess alert-dismissible alert-custom text-center" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                    <strong>{{ message }}</strong>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+        </div>
+      </div>
+    </div>
     <div>{% block content2 %}{% endblock %}</div>
     <div id="footer">
       {% block footer %}

@@ -2,22 +2,18 @@ from flask_security.models import fsqla_v2 as fsqla
 from flask_security import UserMixin, RoleMixin, SQLAlchemyUserDatastore
 from flask_sqlalchemy import SQLAlchemy
 from flask import current_app
-#from sqlalchemy.ext.hybrid import hybrid_property
-#from ..run_mode import room_string_length
+from datetime import datetime, timezone, timedelta
 
 db = SQLAlchemy()
-
-# Setup Flask-Security
-#security = Security(current_app, user_datastore)
 
 
 class Room(db.Model):
     __tablename__ = "roomCreate"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     timestamp = db.Column(db.Integer, nullable=False)
     room_string = db.Column(db.Text, unique=True, nullable=False)
     room_type = db.Column(db.Text, nullable=True)
-    room_creator_uid = db.Column(db.Integer, nullable=True)
+    room_creator_uid = db.Column(db.BigInteger, nullable=True)
     room_state = db.Column(db.Text, nullable=True) #active, archived etc.
 
     def __init__(self, timestamp, room_string, room_type, room_creator_uid, room_state):
@@ -36,16 +32,16 @@ fsqla.FsModels.set_db_info(db)
 class Role(db.Model, fsqla.FsRoleMixin):
 # Define models
     __tablename__ = "role"
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(), unique=True)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, unique=True)
     description = db.Column(db.String())
 
 class User(db.Model, fsqla.FsUserMixin):
     __tablename__ = "user"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     email = db.Column(db.Text, unique=True, nullable=False)
     active = db.Column(db.Boolean())
-    confirmed_at = db.Column(db.DateTime)
+    confirmed_at = db.Column(db.Integer)
     fs_uniquifier = db.Column(db.Text, unique=True, nullable=False)
     user_type = db.Column(db.Text, nullable=True) #demo, early-bird, enterprise, family
     auth_route = db.Column(db.Text, nullable=True) #e.g., fb, goog, shiboleth etc.
@@ -54,6 +50,8 @@ class User(db.Model, fsqla.FsUserMixin):
     last_login_ip = db.Column(db.Text, nullable=True)
     current_login_ip = db.Column(db.Text, nullable=True)
     login_count = db.Column(db.Integer, nullable=True)
+    preferred_nick = db.Column(db.Text, nullable=True) #default is the part before @ in email
+    preferred_theme = db.Column(db.Text, nullable=True) # for now it's default, None
     roles = db.relationship('Role', secondary='roles_users',
                             backref=db.backref('user', lazy='dynamic'))
 
@@ -63,38 +61,19 @@ class User(db.Model, fsqla.FsUserMixin):
 class RolesUsers(db.Model):
     __tablename__ = 'roles_users'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'))
-    role_id = db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
-
-
-
-class CurrentUser(db.Model):
-    __tablename__ = "currentUsers"
-    id = db.Column(db.Integer, primary_key=True)
-    room_id = db.Column(db.Integer)
-    sid = db.Column(db.Text)
-    screenName = db.Column(db.Text)
-
-    def __init__(self, room_id, sid, screenName):
-    #No need to collect screenName, right?
-    #def __init__(self, room_id, sid):
-        self.room_id = room_id
-        self.sid = sid
-        self.screenName = screenName
-
-    def __repr__(self):
-        return '<CurrentUser {} in room {}>'.format(self.sid, self.room_id)
+    id = db.Column(db.BigInteger, primary_key=True)
+    user_id = db.Column('user_id', db.BigInteger, db.ForeignKey('user.id'))
+    role_id = db.Column('role_id', db.Integer, db.ForeignKey('role.id'))
 
 
 class VideoLoaded(db.Model):
     __tablename__ = "videoRecords"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     timestamp = db.Column(db.Integer)
-    room_id = db.Column(db.Integer)
+    room_id = db.Column(db.BigInteger)
     sid = db.Column(db.Text)
     videoURL = db.Column(db.Text)
-    vloader_uid = db.Column(db.Integer, nullable=True)
+    vloader_uid = db.Column(db.BigInteger, nullable=True)
 
 
     def __init__(self, timestamp, room_id, sid, videoURL):
@@ -110,9 +89,9 @@ class VideoLoaded(db.Model):
 
 class RoomEvents(db.Model):
     __tablename__ = "roomEvents"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     timestamp = db.Column(db.Integer)
-    room_id = db.Column(db.Integer)
+    room_id = db.Column(db.BigInteger)
     event_type = db.Column(db.Text) #2-character max identifier of room events
     event_details = db.Column(db.Text, nullable=True)
 
@@ -125,5 +104,88 @@ class RoomEvents(db.Model):
 
     def __repr__(self):
         return '<Room event logs for room {}>'.format(self.room_id)
+
+class SubscribeList(db.Model):
+    __tablename__ = "subscribeList"
+    id = db.Column(db.BigInteger, primary_key=True)
+    timestamp = db.Column(db.Integer)
+    email = db.Column(db.Text, nullable=False)
+    sub_type = db.Column(db.Text, nullable=True) #2-character max identifier of room events
+
+    def __init__(self, email, sub_type):
+        self.timestamp = datetime.now(timezone.utc).timestamp()
+        self.email = email
+        self.sub_type = sub_type
+
+    def __repr__(self):
+        return '<Email {} is subscribed to sub_type {}>'.format(self.email, self.sub_type)
+
+
+class CouponUsed(db.Model):
+    __tablename__ = "couponUsed"
+    id = db.Column(db.BigInteger, primary_key=True)
+    timestamp = db.Column(db.Integer)
+    email = db.Column(db.Text, nullable=False)
+    coupon_code = db.Column(db.Text, nullable=False) #2-character max identifier of room events
+
+    def __init__(self, email, coupon_code):
+        self.timestamp = datetime.now(timezone.utc).timestamp()
+        self.email = email
+        self.coupon_code = coupon_code
+
+    def __repr__(self):
+        return '<Email {} has signed up with coupon code {}>'.format(self.email, self.coupon_code)
+
+
+class ExpressInterest(db.Model):
+    __tablename__ = "expressInterest"
+    id = db.Column(db.BigInteger, primary_key=True)
+    timestamp = db.Column(db.Integer)
+    email = db.Column(db.Text, nullable=False)
+    other_details = db.Column(db.Text, nullable=True)
+
+    def __init__(self, email, other_details):
+        self.timestamp = datetime.now(timezone.utc).timestamp()
+        self.email = email
+        self.other_details = other_details
+
+    def __repr__(self):
+        return '<Eoi for email: {}>'.format(self.email)
+
+class LastEmailRecord(db.Model):
+    __tablename__ = "lastEmailRecord"
+    id = db.Column(db.BigInteger, primary_key=True)
+    timestamp = db.Column(db.Integer)
+    email = db.Column(db.Text, nullable=False)
+    last_email_reason = db.Column(db.Text, nullable=True)
+    num_emails_total = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, email, last_email_reason, num_emails_total):
+        self.timestamp = datetime.now(timezone.utc).timestamp()
+        self.email = email
+        self.last_email_reason = last_email_reason
+        self.num_emails_total = num_emails_total
+
+    def __repr__(self):
+        return '<email sent to {} for {}>'.format(self.email, self.email_reason)
+
+
+class CurrentUserRoomList(db.Model):
+    __tablename__ = "currentUserRoomList"
+    id = db.Column(db.BigInteger, primary_key=True)
+    timestamp = db.Column(db.Integer) #when a user signs in to a room
+    room_string = db.Column(db.Text, nullable=False)
+    user_string = db.Column(db.Text, nullable=False) #either the email, or the sid
+    if_user_auth = db.Column(db.Boolean, nullable=True) #if user is authenticated or guest
+
+    def __init__(self, room_string, user_string, if_user_auth):
+        self.timestamp = datetime.now(timezone.utc).timestamp()
+        self.room_string = room_string
+        self.user_string = user_string
+        self.if_user_auth = if_user_auth
+
+    def __repr__(self):
+        return '<user {} joined room {}>'.format(self.user_string, self.room_string)
+
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
