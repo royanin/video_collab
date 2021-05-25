@@ -68,9 +68,12 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
 
     app.config['srlzr'] = URLSafeTimedSerializer(os.getenv("secret_key"))
 
-    app.config['COUPON_CODES'] = json.loads(os.getenv("COUPON_CODES"))
-    app.config['COUPON_CODE_TO_USERTYPE'] =  json.loads(os.getenv("COUPON_CODE_TO_USERTYPE"))
+    #app.config['COUPON_CODES'] = json.loads(os.getenv("COUPON_CODES"))
+    #app.config['COUPON_CODE_TO_USERTYPE'] =  json.loads(os.getenv("COUPON_CODE_TO_USERTYPE"))
+    app.config['usertype_to_roomtype'] = json.loads(os.getenv("USER_TYPE_TO_ROOM_TYPE"))
+    app.config['room_type_details'] = json.loads(os.getenv("ROOM_TYPE_DETAILS_LIST"))
 
+    '''
     app.config['room_alive_dict'] = {'d2edu':600, 'da':7200, 'd2long':2700,
                     'dmed':1500, 'dmed_long':3600} #in seconds
     app.config['room_access_lifespan_dict'] = {'d2edu':1600, 'da':864000,
@@ -78,9 +81,9 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
     #this doesn't really work because how the room_alive_dict is enforced
     app.config['room_cap_dict'] = {'d2edu':2, 'da': 8, 'd2long': 2,
                         'dmed':5, 'dmed_long':5} #in number of connections
-
-    app.config['usertype_to_roomtype'] = { k:k for k in app.config['room_alive_dict'].keys()}
-    app.config['usertype_to_roomtype'][None] = 'd2edu'
+    '''
+    #app.config['usertype_to_roomtype'] = { k:k for k in app.config['room_alive_dict'].keys()}
+    #app.config['usertype_to_roomtype'][None] = 'd2edu'
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)

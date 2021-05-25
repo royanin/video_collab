@@ -8,15 +8,16 @@ db = SQLAlchemy()
 
 
 class Room(db.Model):
-    __tablename__ = "roomCreate"
+    __tablename__ = "room"
     id = db.Column(db.BigInteger, primary_key=True)
     timestamp = db.Column(db.Integer, nullable=False)
     room_string = db.Column(db.Text, unique=True, nullable=False)
-    room_type = db.Column(db.Text, nullable=True)
+    room_type = db.Column(db.Text, nullable=False)
     room_creator_uid = db.Column(db.BigInteger, nullable=True)
     room_state = db.Column(db.Text, nullable=True) #active, archived etc.
 
-    def __init__(self, timestamp, room_string, room_type, room_creator_uid, room_state):
+    def __init__(self, timestamp, room_string, room_type, room_creator_uid,
+     room_state):
         self.timestamp = timestamp
         self.room_string = room_string
         self.room_type = room_type
@@ -25,6 +26,7 @@ class Room(db.Model):
 
     def __repr__(self):
         return '<Room {}>'.format(self.room_string)
+
 
 # Define models
 fsqla.FsModels.set_db_info(db)
@@ -57,7 +59,41 @@ class User(db.Model, fsqla.FsUserMixin):
 
     def __repr__(self):
         return '<User {}>'.format(self.email)
+"""
+class UserTypeDetails(db.Model):
+    __tablename__ = "userTypeDetails"
+    id = db.Column(db.Integer, primary_key=True)
+    user_type = db.Column(db.Text, nullable=False)
+    room_type = db.Column(db.Text, nullable=False)
 
+    def __init__(self, user_type, room_type):
+        self.user_type = user_type
+        self.room_type = room_type
+
+    def __repr__(self):
+        return '<User_type {} creates rooms with room_type {}>'.format(self.user_type,
+        self.room_type)
+
+class RoomTypeDetails(db.Model):
+    __tablename__ = "roomTypeDetails"
+    id = db.Column(db.Integer, primary_key=True)
+    room_type = db.Column(db.Text, nullable=False)
+    room_cap = db.Column(db.Integer, nullable=True) #in persons
+    room_duration = db.Column(db.Integer, nullable=True) #in seconds
+    room_char_other = db.Column(db.Text, nullable=True) #None, for now
+
+
+    def __init__(self, room_type, room_cap, room_duration,
+    room_char_other):
+        self.room_type = room_type
+        self.room_cap = room_cap
+        self.room_duration = room_duration
+        self.room_char_other = room_char_other
+
+    def __repr__(self):
+        return '<Room_type {} has a cap of {} persons and duration {} seconds\
+        >'.format(self.room_type, self.room_cap, self.room_duration)
+"""
 class RolesUsers(db.Model):
     __tablename__ = 'roles_users'
     __table_args__ = {'extend_existing': True}
@@ -120,6 +156,23 @@ class SubscribeList(db.Model):
     def __repr__(self):
         return '<Email {} is subscribed to sub_type {}>'.format(self.email, self.sub_type)
 
+class CouponCodeDetails(db.Model):
+    __tablename__ = "couponCodeDetails"
+    id = db.Column(db.BigInteger, primary_key=True)
+    coupon_code = db.Column(db.Text, nullable=False, unique=True)
+    user_type = db.Column(db.Text, nullable=False)
+    if_valid = db.Column(db.Boolean, nullable=True)
+    expires_on = db.Column(db.Integer, nullable=True)
+
+    def __init__(self, coupon_code, user_type, expires_on):
+        self.coupon_code = coupon_code
+        self.user_type = user_type
+        self.if_valid = if_valid
+        self.expires_on = expires_on
+
+
+    def __repr__(self):
+        return '<Coupon code {} generates user_type {}>'.format(self.coupon_code, self.user_type)
 
 class CouponUsed(db.Model):
     __tablename__ = "couponUsed"
@@ -151,6 +204,20 @@ class ExpressInterest(db.Model):
 
     def __repr__(self):
         return '<Eoi for email: {}>'.format(self.email)
+
+
+class BouncedEmailList(db.Model):
+    __tablename__ = "bouncedEmailList"
+    id = db.Column(db.BigInteger, primary_key=True)
+    timestamp = db.Column(db.Integer) #when bounced first
+    email = db.Column(db.Text, nullable=False)
+
+    def __init__(self, email):
+        self.timestamp = datetime.now(timezone.utc).timestamp()
+        self.email = email
+
+    def __repr__(self):
+        return '<Bounced email: {}>'.format(self.email)
 
 class LastEmailRecord(db.Model):
     __tablename__ = "lastEmailRecord"

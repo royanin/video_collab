@@ -6,7 +6,8 @@ import sqlite3, json, os, secrets, random
 from .utils import record_room_create, parse_url, validate_newname,\
 validate_newroom, clean_url, get_guest_stat_msg,\
 handle_email_checkin, check_token, record_current_room_user,\
-remove_current_room_user
+remove_current_room_user, change_user_nickname, get_room_alive_seconds,\
+get_room_cap
 from .models import *
 import uuid
 from flask_security.forms import RegisterForm
@@ -127,40 +128,36 @@ def new_meeting():
     if form.validate_on_submit():
         name = form.name.data
         session['name'] = name
-        try:
-            if current_user.is_authenticated:
-                room_type=current_app.config['usertype_to_roomtype'][current_user.user_type]
-                if name != current_user.preferred_nick:
-                    if validate_newname(name):
-                        current_user.preferred_nick=name
-                        db.session.add(current_user)
-                        db.session.commit()
-                        flash("Name change successful.")
-                    else:
-                        flash("A screen name can have letters and numbers only; 4-15 characters long")
-                        return render_template("index.html", form=form,  form2=form2)
-                #now we can create a room
-                u = uuid.uuid4()
-                room = u.hex
 
-            else:
-                #room_type='d2edu'
-                flash("You need an account before you can create a room")
-                return redirect(url_for("signup")) #redirect user to sign up before creating room
-        except Exception as e:
-            room_type='d2edu'
+        if not current_user.is_authenticated:
+            #room_type='d2edu'
+            flash("You need an account before you can create a room")
+            return redirect(url_for("signup")) #redirect user to sign up before creating room
 
-        room_id, ts = record_room_create(room, room_type=room_type)
-        room_alive_seconds = current_app.config['room_alive_dict'][room_type]
-        #store the room_id in redis, and not as a client session variable!
-        current_app.redis.set('{}_id'.format(room), room_id)
+        elif current_user.is_authenticated:
+            #room_type=current_app.config['usertype_to_roomtype'][current_user.user_type]
+            if name != current_user.preferred_nick:
+                if validate_newname(name):
+                    change_user_nickname(name)
+                else:
+                    flash("A screen name can have letters and numbers only; 4-15 characters long")
+                    return render_template("index.html", form=form,  form2=form2)
+            #now we can create a room
+            u = uuid.uuid4()
+            room = u.hex
+            room_type = current_app.config['usertype_to_roomtype'][current_user.user_type]
+            room_alive_seconds = get_room_alive_seconds(room_type)
 
+            room_id, ts = record_room_create(room_string = room,
+                            room_type = room_type,
+                            room_creator_uid = current_user.id)
 
-        #session['room'], session['room_id'], session['room_ts'] = room, room_id, ts + room_alive_seconds
-        session['room'], session['room_ts'] = room, ts + room_alive_seconds
-        session['joint'] = "{}.{}".format(room, name)
-        session['guest_stat'] = get_guest_stat_msg(name, room)
-        return redirect(url_for('main.chat', room=room, _external = True, _scheme=os.getenv("http_scheme")))
+            current_app.redis.set('{}_id'.format(room), room_id)
+
+            session['room'], session['room_ts'] = room, ts + room_alive_seconds
+            session['joint'] = "{}.{}".format(room, name)
+            session['guest_stat'] = get_guest_stat_msg(name, room)
+            return redirect(url_for('main.chat', room=room, _external = True, _scheme=os.getenv("http_scheme")))
     else:
         flash("Something went wrong. Try again?")
         return render_template("index.html", form=form,  form2=form2)
@@ -199,12 +196,8 @@ def chat(room):
         session['name'] = form.name.data
         room_id, room_type, ts = validate_newroom(room)
         if room_id != None:
-            try:
-                room_alive_seconds = current_app.config['room_alive_dict'][room_type]
-            except Exception as e:
-                room_alive_seconds = current_app.config['room_alive_dict']['d2edu']
+            room_alive_seconds = get_room_alive_seconds(room_type)
             session['room'], session['room_ts'] = room, ts + room_alive_seconds
-            print(room_alive_seconds)
             session['joint'] = "{}.{}".format(room, session['name'])
             session['guest_stat'] = get_guest_stat_msg(session['name'], room)
             return render_template('room.html', room=room, room_url=room_url)
@@ -213,7 +206,7 @@ def chat(room):
             flash("Please check the room link. This room doesn't exist/expired/too full.")
             return redirect(url_for('main.index'))
     elif request.method=='POST' and not(form.validate_on_submit()):
-        msg = "That screenname didn't work. Try a boring one, e.g., star_1_blue sky?"
+        msg = "That screenname didn't work. Try a boring one, e.g., user01?"
         #change: return redirect to /chat/<room> instead?
         return render_template("chooseName.html", form=form, msg=msg)
     elif request.method == 'GET':
@@ -222,12 +215,11 @@ def chat(room):
         else:
             name = session.get('name', '')
 
-        print('name is', name)
         room_id, room_type, ts = validate_newroom(room)
-        print(current_app.config['room_cap_dict'])
         #get the number of guests
         num_guests = len(current_app.redis.smembers('{}_occ'.format(room)))
-        num_allowed_guests = current_app.config['room_cap_dict'][room_type]
+        num_allowed_guests = get_room_cap(room_type)
+
         if (num_guests >= num_allowed_guests) or room_id is None:
             flash("Please check the room link. This room doesn't exist/expired/too full.")
             return redirect(url_for('main.index'))

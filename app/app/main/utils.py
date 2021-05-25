@@ -127,16 +127,20 @@ def send_link(email, fs_uq, link_type_msg):
 
     return
 
-
-
 def check_email_eligible(email, coupon_code=None):
     email_tld = email.split(".")[-1]
     email_domain = email.split("@")[-1]
 
-
-    if coupon_code in current_app.config['COUPON_CODES']:
-        store_coupon_code(email,  coupon_code = coupon_code) #store the coupon code
-        return True, current_app.config['COUPON_CODE_TO_USERTYPE'][coupon_code]
+    if (coupon_code):
+        if (db.session.query(CouponCodeDetails.id).filter_by(coupon_code=coupon_code).first()):
+            cc = db.session.query(CouponCodeDetails).filter_by(coupon_code=coupon_code).first()
+            if (cc.if_valid):
+                store_coupon_code(email,  coupon_code = coupon_code) #store the coupon code
+                return True, cc.user_type
+            else:
+                return False, None
+        else:
+            return False, None
     elif email_tld in ['edu']:
         return True, 'd2edu'
     else:
@@ -231,17 +235,17 @@ def get_guest_stat_msg(name, room_url):
 
     return guest_stat_msg
 
-def record_room_create(room_string, room_type='d2edu20', room_creator_uid = None,
+def record_room_create(room_string, room_type, room_creator_uid = None,
                         room_state = 'a'):
     #room_type: 'd2' is demo for 2, 'da' -> demo for any, 'd2edu30': demo for edu with 30 min. time limit
     #room_state: 'a' for active; could be inactive, read-only, secure etc. etc.
     ts = datetime.now(timezone.utc).timestamp()
-    if current_user.is_authenticated:
-        room_creator_uid = current_user.id
-        room_type = current_user.user_type
+
+    #room_creator_uid = current_user.id
+    #room_type = current_app['usertype_to_roomtype'][current_user.user_type]
     new_room = Room(timestamp=ts, room_string=room_string, room_type=room_type,
                         room_creator_uid = room_creator_uid, room_state = room_state)
-    #print(new_room)
+
     db.session.add(new_room)
     db.session.commit()
     return new_room.id, ts
@@ -255,6 +259,12 @@ def get_user_string_auth_stat():
         if_user_auth = False
 
     return user_string, if_user_auth
+
+def get_room_alive_seconds(room_type):
+    return current_app.config['room_type_details'][room_type]['room_duration']
+
+def get_room_cap(room_type):
+    return current_app.config['room_type_details'][room_type]['room_cap']
 
 
 def record_current_room_user(room_string):
@@ -399,6 +409,14 @@ def clean_url(room_url):
     else:
         return None, None
     '''
+
+def change_user_nickname(name):
+    current_user.preferred_nick=name
+    db.session.add(current_user)
+    db.session.commit()
+    flash("Name change successful.")
+    return
+
 def validate_newname(name):
 
     if len(name)>=4 and len(name)<=15 and name.isalnum():
