@@ -11,8 +11,6 @@ from redis import Redis
 import rq
 #from flask_bootstrap import Bootstrap
 from itsdangerous import URLSafeTimedSerializer
-from gevent import monkey
-monkey.patch_all()
 
 
 socketio = SocketIO()

@@ -1,6 +1,9 @@
 #!/bin/env python
 #from app.run_mode import env_var
 import os
+from gevent import monkey
+monkey.patch_all()
+
 from app import create_app, socketio
 
 
@@ -12,5 +15,6 @@ if __name__ == '__main__':
         socketio.run(app, host="0.0.0.0", port=5000)
     else:
         socketio.run(app, host="0.0.0.0", port=5000,
-                    certfile=os.getenv("ssl_certfile") or None,
-                    keyfile=os.getenv("ssl_keyfile") or None)
+                    #certfile=os.getenv("ssl_certfile") or None,
+                    #keyfile=os.getenv("ssl_keyfile") or None
+                    )
