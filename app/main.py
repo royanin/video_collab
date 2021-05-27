@@ -3,14 +3,14 @@
 import os
 from app import create_app, socketio
 
-#import os
-
-#Check if the db already exists. If not, create the file and the table.
-#This is totally hacky -- need to change once more persistence is required.
-#if os.isfile("data/i")
 
 print('debug_opt:',os.getenv("debug_opt"))
 app = create_app(debug=os.getenv("debug_opt"))
 
 if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", port=5000)
+    if os.getenv("http_scheme")=="http":
+        socketio.run(app, host="0.0.0.0", port=5000)
+    else:
+        socketio.run(app, host="0.0.0.0", port=5000,
+                    certfile=os.getenv("ssl_certfile") or None,
+                    keyfile=os.getenv("ssl_keyfile") or None)
