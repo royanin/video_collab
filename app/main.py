@@ -1,8 +1,8 @@
 #!/bin/env python
 #from app.run_mode import env_var
 import os
-from gevent import monkey
-monkey.patch_all()
+#from gevent import monkey
+#monkey.patch_all()
 
 from app import create_app, socketio
 
