@@ -38,7 +38,7 @@
                     </div>
                 </div>
 
-                <div class="p-2 m-2"><a href="#couponCode"
+                <div class="p-2 m-2"><a class="brand-link" href="#couponCode"
                   data-toggle="collapse">Click here if you got a coupon code</a></div>
                 <div id="couponCode" class="collapse">
                   <div class="form-row">
@@ -55,7 +55,11 @@
                     Cannot proceed without accepting terms.
                   </div>
                   <label class="form-check-label" for="tos_ok">
-                    I accept terms and privacy.
+                    I accept <a class="brand-link" href="https://zipsync.us/tos" target="_blank">terms
+                    &nbsp;<i class="fas fa-external-link-alt"></i></a>
+                     and
+                      <a class="brand-link" href="https://zipsync.us/privacy" target="_blank">privacy agreements
+                      &nbsp;<i class="fas fa-external-link-alt"></i></a>.
                   </label>
                 </div>
                 <br>
@@ -68,7 +72,7 @@
       </div>
       <div class="row">
         <div class="col-md-6 offset-md-3  text-center">
-            <small>Already have an account?&nbsp;<a  style="color:#7133FF;" href="{{ url_for('main.signin') }}">Sign in</small>
+            <small>Already have an account?&nbsp;<a  class="brand-link" href="{{ url_for('main.signin') }}">Sign in</small>
              {#<p><a  href="{{ url_for('main.confirm') }}">Resend confirmation</a></p>#}
         </div>
       </div>

@@ -185,7 +185,7 @@ def handle_email_checkin(email, coupon_code=None):
             #reject -- store the emails and date etc.
             if db.session.query(ExpressInterest.id).filter_by(email=email).first() is None:
                 store_eoi_email(email, other_details=None)
-            flash("Thank you for your interest! We will email you when ZipSync is ready for more users.")
+            flash("We added your name to the waitlist. We will email you as soon as we are ready!.")
             if db.session.query(SubscribeList.id).filter_by(email=email).first() is None:
                 store_sub_email(email, sub_type=None)
             #return "Sorry, ZipSync is not yet ready for you. We'll email you soon!"
