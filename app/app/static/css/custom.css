@@ -64,12 +64,12 @@ body {
 }
 
 .alert-custom {
-  color: #32a852;
+  color: #154722;
   background-color: #fefefe;
-  font-size: 1.1em;
+  font-size: 1.0em;
   padding-top: 10px;
   padding-bottom: 10px;
-  font-weight: bold;
+  /*font-weight: bold;*/
   position: absolute;
   z-index: 100;
   box-shadow: 1px 1px 3px #777;

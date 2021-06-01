@@ -120,14 +120,15 @@ def send_link(email, fs_uq, link_type_msg):
         click on the link above. If you did not request this email, it may have resulted from someone\
         else inaccurately typing their email while creating an account on ZipSync.us. If you are\
         still concerned, please forward this notification to abuse@zipsync.us and\
-        let us know in the forward that you did not request the verification.<br><br>\
+        let us know that you did not request the verification.<br><br>\
         Sincerely,<br>ZipSync.us".format(email, link, current_app.config['CONFIRM_EMAIL_WITHIN'])
 
         if link_type_msg=="sign_in":
             email_subject="Sign in to your ZipSync account"
         elif link_type_msg=="confirm":
             email_subject="Confirm your email and sign in to your ZipSync account"
-        response = send_email(current_app.config['accounts_email'], email, email_subject, email_body)
+        response = send_email('ZipSync.us <{}>'.format(current_app.config['accounts_email']),
+                                    email, email_subject, email_body)
 
         if response=="success":
             flash("Check your email for a magic link to log in")
@@ -199,7 +200,7 @@ def handle_email_checkin(email, coupon_code=None):
             #reject -- store the emails and date etc.
             if db.session.query(ExpressInterest.id).filter_by(email=email).first() is None:
                 store_eoi_email(email, other_details=None)
-            flash("We added your name to the waitlist. We will email you as soon as we are ready!.")
+            flash("We added your name to the waitlist. We will email you as soon as we are ready.")
             if db.session.query(SubscribeList.id).filter_by(email=email).first() is None:
                 store_sub_email(email, sub_type=None)
             #return "Sorry, ZipSync is not yet ready for you. We'll email you soon!"
