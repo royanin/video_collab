@@ -114,7 +114,20 @@ def send_link(email, fs_uq, link_type_msg):
         link = url_for("main.confirm_token", token=token, _external=True)
         print('link:', link)
         print('token:', token)
-        response = send_email(current_app.config['accounts_email'], email, link_type_msg, link)
+        email_body = "Hello {},<br><br><br>Use the link below to sign in to your ZipSync account:\
+        <br><br>{}<br><br>\
+        This link expires in {}.<br><br>If you did not attempt to create an account on ZipSync, do not\
+        click on the link above. If you did not request this email, it may have resulted from someone\
+        else inaccurately typing their email while creating an account on ZipSync.us. If you are\
+        still concerned, please forward this notification to abuse@zipsync.us and\
+        let us know in the forward that you did not request the verification.<br><br>\
+        Sincerely,<br>ZipSync.us".format(email, link, current_app.config['CONFIRM_EMAIL_WITHIN'])
+
+        if link_type_msg=="sign_in":
+            email_subject="Sign in to your ZipSync account"
+        elif link_type_msg=="confirm":
+            email_subject="Confirm your email and sign in to your ZipSync account"
+        response = send_email(current_app.config['accounts_email'], email, email_subject, email_body)
 
         if response=="success":
             flash("Check your email for a magic link to log in")
@@ -175,7 +188,8 @@ def handle_email_checkin(email, coupon_code=None):
     u_ = user_datastore.find_user(email=email)
     if (u_):
         fs_uq = u_.fs_uniquifier
-        link_type_msg = "Check your email for a magic link to sign in."
+        #link_type_msg = "Check your email for a magic link to sign in."
+        link_type_msg = "sign_in"
         msg_outcome = send_link(email, fs_uq, link_type_msg=link_type_msg)
         return msg_outcome
 
@@ -202,7 +216,8 @@ def handle_email_checkin(email, coupon_code=None):
             db.session.commit()
 
             #resend confirmation email
-            link_type_msg = "Check your email to confirm your account and sign in."
+            #link_type_msg = "Check your email to confirm your account and sign in."
+            link_type_msg = "confirm"
             msg_outcome = send_link(email, fs_uq, link_type_msg=link_type_msg)
             return msg_outcome
 

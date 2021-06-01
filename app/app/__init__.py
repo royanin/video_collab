@@ -53,12 +53,12 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
     #app.config['SECURITY_UNIFIED_SIGNIN']=True
     #app.config['SECURITY_US_ENABLED_METHODS'] = [ "email"]
     #app.config['SECURITY_TOKEN_MAX_AGE'] = '600 seconds'
-    app.config['SECURITY_LOGIN_WITHIN'] = '600 seconds'
+    app.config['SECURITY_LOGIN_WITHIN'] = '60 minutes'
     app.config['SECURITY_DEFAULT_REMEMBER_ME'] = True
     #app.config['SECURITY_CONFIRMABLE'] = True
     #app.config['SECURITY_CONFIRM_EMAIL_WITHIN'] = '30 minutes'
     #app.config['SECURITY_LOGIN_USER_TEMPLATE'] = "/security/send_login.html"
-    app.config['CONFIRM_EMAIL_WITHIN'] = '30 minutes'
+    app.config['CONFIRM_EMAIL_WITHIN'] = '60 minutes'
     app.config['SECURITY_LOGIN_URL']="/signin"
     app.config['SECURITY_PASSWORD_SALT']=secrets.token_hex(16)
     #app.config['SECURITY_TOTP_SECRETS'] = {1: os.getenv('secret_key')}
