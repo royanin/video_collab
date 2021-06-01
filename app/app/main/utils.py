@@ -127,7 +127,7 @@ def send_link(email, fs_uq, link_type_msg):
             email_subject="Sign in to your ZipSync account"
         elif link_type_msg=="confirm":
             email_subject="Confirm your email and sign in to your ZipSync account"
-        response = send_email('ZipSync.us <{}>'.format(current_app.config['accounts_email']),
+        response = send_email(current_app.config['accounts_email'],
                                     email, email_subject, email_body)
 
         if response=="success":

@@ -87,7 +87,8 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
     app.register_blueprint(main_blueprint)
 
     #MAIL_config:
-    app.config['accounts_email'] = "accounts@zipsync.us"
+    app.config['accounts_email'] = "ZipSync.us <accounts@zipsync.us>"
+    app.config['notif_email'] = "notif_bot@zipsync.us"
     app.config['MAIL_SERVER']=os.getenv("MAIL_SERVER")
     app.config['MAIL_PORT']=os.getenv("MAIL_PORT")
     app.config['MAIL_USE_TLS']=(os.getenv("MAIL_USE_TLS") == 'true')

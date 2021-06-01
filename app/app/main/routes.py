@@ -1,7 +1,10 @@
-from flask import session, redirect, url_for, render_template, request, current_app, flash
+from flask import session, redirect, url_for, render_template, request, current_app,\
+flash, Markup
+import traceback
 from . import main
 from .forms import NewMeetingForm, JoinMeetingForm, CustomRegistrationForm,CustomLoginForm,\
 CustomConfirmForm
+from .emails import send_email
 import sqlite3, json, os, secrets, random
 from .utils import record_room_create, parse_url, validate_newname,\
 validate_newroom, clean_url, get_guest_stat_msg,\
@@ -13,6 +16,7 @@ import uuid
 from flask_security.forms import RegisterForm
 #from flask_security.confirmable import confirm_user
 from flask_security import login_user, auth_required, current_user
+from werkzeug.exceptions import InternalServerError
 
 #from ..run_mode import env_var
 '''
@@ -44,7 +48,40 @@ def delete():
         print(u_.__dict__)
         #print(user_registered(user=u_))
         db.session.commit()
+
+class BigException(Exception):
+    pass
+
+@main.route('/simulate_error', methods=['GET'])
+def make_error():
+    raise BigException("Something bad happened here..")
+    return "Welcome to error simulation!"
 '''
+@main.errorhandler(404)
+def not_found_error(e):
+    print('in 404 error handler')
+    flash(Markup("Oops! The requested page does not exist. <a class=brand-link href=")\
+    +url_for('main.index')+Markup(">Go somewhere nice instead.</a>"))
+    return render_template('response.html'), 404
+
+@main.errorhandler(InternalServerError)
+def handle_500(e):
+    db.session.rollback()
+    print('in error_handler')
+    error_stacktrace = traceback.format_exc()
+    print(error_stacktrace)
+    try:
+        from_email = current_app.config['notif_email']
+        to_email = current_app.config['MAIL_SENDER'] #goes to hello@zipsync.us
+        email_sub = "ZipSync Server error"
+        resp = send_email(from_email, to_email, email_sub, error_stacktrace, mail_handler='sg')
+    except Exception as exc:
+        print(exc.message)
+    #return current_app.finalize_request(e, from_error_handler=True)
+    flash(Markup("Oops! Something went wrong. <a class=brand-link href=")\
+    +url_for('main.index')+Markup(">Go somewhere nice instead.</a>"))
+    return render_template('response.html'), 500
+
 @main.route('/signin', methods=['GET', 'POST'])
 def signin():
     form = CustomLoginForm(request.form)
