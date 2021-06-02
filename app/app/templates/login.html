@@ -37,7 +37,7 @@
                     placeholder="Email",) }}
                 </div>
                 {% endif %}
-                <button type="submit" class="btn btn-sm btn-primary" value="save">Get magic link</button>
+                <button type="submit" class="btn btn-sm btn-primary" value="save">Get login link</button>
                 {#{% include "accept_tos.html" %}#}
               {# {{ render_field(form.submit) }} #}
             </form>
@@ -49,6 +49,15 @@
             <small>No account?&nbsp;<a class="brand-link" href='{{ url_for("main.signup") }}'>Create one</a></small>
         </div>
       </div>
+      <div class="row">
+        <div class="col-md-6 offset-md-3  text-center">
+        <p class="p-5 m-5"><small>*Rooms created under free accounts allow 2-person meetings
+           for 25 minutes.</small><br>
+           <small>Questions/Comments? Email hello@zipsync.us</small>
+         </p>
+
+      </div>
+    </div>
 </div>
 
 

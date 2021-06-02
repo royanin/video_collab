@@ -28,7 +28,7 @@
                     {{ render_field_with_bootstrap_errors(form.email,maxlength="140", class="form-control",
                     placeholder="Email",) }}
                 </div>#}
-                <div class="form-row">
+                <div class="form-row p-2 m-2">
                     <input type="email" class="form-control" id="email"  name="email" placeholder="Email"  required>
                     <div class="valid-feedback">
                       Looks good!
@@ -37,16 +37,19 @@
                       We need your email to get in touch with you.
                     </div>
                 </div>
+                Create a FREE account* with your .edu email.
+                <!--<div class="p-2 m-2">-->
+                  <a class="brand-link" href="#couponCode"
+                  data-toggle="collapse">Click here if you got a promo code</a>
+                <!--</div>-->
 
-                <div class="p-2 m-2"><a class="brand-link" href="#couponCode"
-                  data-toggle="collapse">Click here if you got a promo code</a></div>
                 <div id="couponCode" class="collapse">
-                  <div class="form-row">
+                  <div class="form-row p-2 m-2">
                       <input type="coupon_code" class="form-control" id="coupon_code"
-                      name="coupon_code" placeholder="Coupon code" >
+                      name="coupon_code" placeholder="Promo code" >
                   </div>
                 </div>
-                <div class="form-check">
+                <div class="pt-3 mt-3 form-check">
                   <input class="form-check-input" type="checkbox" value="" name="tos_ok" id="tos_ok" required>
                   <div class="valid-feedback">
                     Looks good!
@@ -54,13 +57,13 @@
                   <div class="invalid-feedback">
                     Cannot proceed without accepting terms.
                   </div>
-                  <label class="form-check-label" for="tos_ok">
+                  <small ><label class="form-check-label" for="tos_ok">
                     I accept <a class="brand-link" href="https://zipsync.us/tos" target="_blank">terms
                     &nbsp;<i class="fas fa-external-link-alt"></i></a>
                      and
                       <a class="brand-link" href="https://zipsync.us/privacy" target="_blank">privacy agreements
                       &nbsp;<i class="fas fa-external-link-alt"></i></a>.
-                  </label>
+                  </label></small>
                 </div>
                 <br>
                 <button type="submit" class="btn btn-sm btn-primary" value="save">Sign up</button>
@@ -72,10 +75,19 @@
       </div>
       <div class="row">
         <div class="col-md-6 offset-md-3  text-center">
-            <small>Already have an account?&nbsp;<a  class="brand-link" href="{{ url_for('main.signin') }}">Sign in</small>
+            <small>Already have an account?&nbsp;<a  class="brand-link" href="{{ url_for('main.signin') }}">Sign in</a></small>
              {#<p><a  href="{{ url_for('main.confirm') }}">Resend confirmation</a></p>#}
         </div>
       </div>
+      <div class="row">
+        <div class="col-md-6 offset-md-3  text-center">
+        <p class="p-5 m-5"><small>*Rooms created under free accounts allow 2-person meetings
+           for 25 minutes.</small><br>
+           <small>Questions/Comments? Email hello@zipsync.us</small>
+         </p>
+
+      </div>
+    </div>
 </div>
 
 
