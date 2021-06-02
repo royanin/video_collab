@@ -131,7 +131,7 @@ def send_link(email, fs_uq, link_type_msg):
                                     email, email_subject, email_body)
 
         if response=="success":
-            flash("Check your email for a magic link to log in")
+            flash("Check your email for a magic link to log in. And please check the spam folder!")
             record_last_email_sent(email, 'ml') #ml: magic_link
         else:
             flash("Oops. This is unexpected. Please try again in a bit.")
