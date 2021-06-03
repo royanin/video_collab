@@ -96,6 +96,10 @@ def create_app(debug=(os.getenv("debug_opt") == 'true')):
     app.config['MAIL_SENDER']=os.getenv("MAIL_SENDER")
     app.config['MAIL_DEFAULT_SENDER']=os.getenv("MAIL_DEFAULT_SENDER")
     app.config['MAIL_REPLYTO']=os.getenv("MAIL_REPLYTO")
+    app.config['MAIL_HANDLER']=os.getenv("MAIL_HANDLER")
+    app.config['AWS_REGION']=os.getenv("AWS_REGION")
+    app.config['AWS_ACCESS_KEY']=os.getenv("AWS_ACCESS_KEY")
+    app.config['AWS_ACCESS_KEY_SECRET']=os.getenv("AWS_ACCESS_KEY_SECRET")
     app.config['MAIL_USERNAME']=os.getenv("SG_SMTP_USERNAME") #for smtp
     app.config['MAIL_PASSWORD']=os.getenv("SG_SMTP_PASSWORD") #for smtp
     app.config['SG_MAIL_API_KEY']=os.getenv("SG_API_KEY")

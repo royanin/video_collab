@@ -74,7 +74,7 @@ def handle_500(e):
         from_email = current_app.config['notif_email']
         to_email = current_app.config['MAIL_SENDER'] #goes to hello@zipsync.us
         email_sub = "ZipSync Server error"
-        resp = send_email(from_email, to_email, email_sub, error_stacktrace, mail_handler='sg')
+        resp = send_email(from_email, to_email, email_sub, error_stacktrace)
     except Exception as exc:
         print(exc.message)
     #return current_app.finalize_request(e, from_error_handler=True)
