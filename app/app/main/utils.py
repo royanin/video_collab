@@ -142,9 +142,9 @@ def send_link(email, fs_uq, link_type_msg):
     return
 
 def check_email_eligible(email, coupon_code=None):
-    email_tld = email.split(".")[-1]
     email_domain = email.split("@")[-1]
-
+    domain_string_list = email_domain.split(".")
+    email_tld = domain_string_list[-1]
     if (coupon_code):
         if (db.session.query(CouponCodeDetails.id).filter_by(coupon_code=coupon_code).first()):
             cc = db.session.query(CouponCodeDetails).filter_by(coupon_code=coupon_code).first()
@@ -156,6 +156,9 @@ def check_email_eligible(email, coupon_code=None):
         else:
             return False, None
     elif email_tld in ['edu']:
+        return True, 'd2edu'
+    elif (email_tld == 'ca') and (domain_string_list[-2] in ['ubc', 'utoronto', 'mcgill', 'uottawa', 'ucalgary',
+    'mcmaster', 'umontreal', 'ualberta', 'uwaterloo']):
         return True, 'd2edu'
     else:
         return False, None
