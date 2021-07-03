@@ -128,8 +128,6 @@ def test_connect():
     session['sid'] = request.sid
     room_url = session.get('room')
 
-    print('in events: session:', session)
-
     #create redis key for the occupants in the room:
     room_occ_key = "{}_occ".format(room_url)
     #this will have all current authenticated and guest users in list

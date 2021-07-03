@@ -10,7 +10,7 @@ from .utils import record_room_create, parse_url, validate_newname,\
 validate_newroom, clean_url, get_guest_stat_msg,\
 handle_email_checkin, check_token, record_current_room_user,\
 remove_current_room_user, change_user_nickname, get_room_alive_seconds,\
-get_room_cap
+get_room_cap, record_video_loading
 from .models import *
 import uuid
 from flask_security.forms import RegisterForm
@@ -59,7 +59,7 @@ def make_error():
 '''
 @main.errorhandler(404)
 def not_found_error(e):
-    print('in 404 error handler')
+    #print('in 404 error handler')
     flash(Markup("Oops! The requested page does not exist. <a class=brand-link href=")\
     +url_for('main.index')+Markup(">Go somewhere nice instead.</a>"))
     return render_template('response.html'), 404
@@ -67,16 +67,17 @@ def not_found_error(e):
 @main.errorhandler(InternalServerError)
 def handle_500(e):
     db.session.rollback()
-    print('in error_handler')
+    #print('in error_handler')
     error_stacktrace = traceback.format_exc()
-    print(error_stacktrace)
+    #print(error_stacktrace)
     try:
         from_email = current_app.config['notif_email']
         to_email = current_app.config['MAIL_SENDER'] #goes to hello@zipsync.us
         email_sub = "ZipSync Server error"
         resp = send_email(from_email, to_email, email_sub, error_stacktrace)
     except Exception as exc:
-        print(exc.message)
+        #print(exc.message)
+        pass
     #return current_app.finalize_request(e, from_error_handler=True)
     flash(Markup("Oops! Something went wrong. <a class=brand-link href=")\
     +url_for('main.index')+Markup(">Go somewhere nice instead.</a>"))
@@ -275,14 +276,11 @@ def editor(room):
 
     """Chat room. The user's name and room must be stored in
     the session."""
-    print(session)
-
     name = session.get('name', '')
     joint = session.get('joint', '')
     #Check if this roomId exists and if it's active
     #To be implemented. For now assume it's OK:
     session['room'] = room
-    print(session)
     if name == '':
         return render_template("chooseName.html")
 
@@ -296,11 +294,13 @@ def editor(room):
 def getURL():
     data = request.get_json()
     url_input = data['url']
-    print('url_input:',url_input)
+
     url_type, url_key = parse_url(url_input)
-    print('parsed_url:', url_type, url_key)
+    #print('parsed_url:', url_type, url_key)
     if url_type != None and url_key != None:
-        return json.dumps({'type':url_type, 'key':url_key})
+        vid_dict = {'type':url_type, 'key':url_key}
+        record_video_loading("{}_:_{}".format(url_type, url_key))
+        return json.dumps(vid_dict)
 
     else:
         return json.dumps({'type':"", 'key':""})

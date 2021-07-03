@@ -463,8 +463,10 @@
                    var numGuests = ulist.length;
                    if (numGuests === 1){
                      var guestStatMsg = "You are the only one in the room.";
+                     minimizeClient();
                    }
                    else{
+                     maximizeChatClient();
                      var guestStatMsg = numGuests+' guests: <strong>'+ulist.join(", ").substring(0,25)+'</strong>';
                    }
                    document.getElementById("roomGuests").innerHTML = "<small>"+guestStatMsg+"</small>"
@@ -479,6 +481,10 @@
                       'sync disconnect on unload': true }
                     );
                     socket.on('connect', function() {
+                        var if_only = '{{session.guest_stat}}';
+                        if (if_only=="You are the only one in the room"){
+                          minimizeClient();
+                        }
                         socket.emit('joined', {});
                     });
 

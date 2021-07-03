@@ -1,5 +1,5 @@
 from flask_security.models import fsqla_v2 as fsqla
-from flask_security import UserMixin, RoleMixin, SQLAlchemyUserDatastore
+from flask_security import UserMixin, RoleMixin, SQLAlchemyUserDatastore, current_user
 from flask_sqlalchemy import SQLAlchemy
 from flask import current_app
 from datetime import datetime, timezone, timedelta
@@ -117,7 +117,7 @@ class VideoLoaded(db.Model):
         self.room_id = room_id
         self.sid = sid
         self.videoURL = videoURL
-        self.vloader_uid = vloader_uid
+        self.vloader_uid = current_user.id if current_user.is_authenticated else None
 
     def __repr__(self):
         return '<videoRecords {} in room {}>'.format(self.room_id, self.videoURL)

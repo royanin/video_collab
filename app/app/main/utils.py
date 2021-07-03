@@ -2,7 +2,7 @@ import sqlite3, json, secrets, hashlib, uuid, bcrypt
 from datetime import datetime, timezone, timedelta
 import random, string
 from urllib.parse import urlparse, parse_qs
-from flask import session, current_app, url_for, flash
+from flask import session, current_app, url_for, flash, request
 #from .models import db, Room, CurrentUser, RoomEvents
 from .models import *
 from .emails import send_email
@@ -83,7 +83,7 @@ def check_token(token, max_age=None, return_data=False):
         invalid = True
 
     if data:
-        print('in utils: data from token:', data)
+        #print('in utils: data from token:', data)
         user = user_datastore.find_user(fs_uniquifier=data[0])
         if user.confirmed_at == None:
             user.confirmed_at = datetime.now(timezone.utc).timestamp()
@@ -112,8 +112,6 @@ def send_link(email, fs_uq, link_type_msg):
         #check if user is confirmed
         token = generate_token(email, fs_uq)
         link = url_for("main.confirm_token", token=token, _external=True)
-        print('link:', link)
-        print('token:', token)
         email_body = "Hello {},<br><br><br>Use the link below to sign in to your ZipSync account:\
         <br><br>{}<br><br>\
         This link expires in {}.<br><br>If you did not attempt to create an account on ZipSync, do not\
@@ -187,7 +185,6 @@ def store_coupon_code(email, coupon_code):
 def handle_email_checkin(email, coupon_code=None):
     #This is unified signin/signup module
     #0. Check if the email is allowed:
-    print('email supplied:', email)
     #for whatever reason, the user is already registered, but may or may not be confirmed:
     u_ = user_datastore.find_user(email=email)
     if (u_):
@@ -231,7 +228,6 @@ def get_current_users_in_room(room_url):
     try:
         occ_set = set(current_app.redis.smembers('{}_occ'.format(room_url)))
         ulist = [ str(u, 'utf-8') for u in occ_set ]
-        print('from utils. ulist:', ulist)
         return len(occ_set), ulist
     except Exception as e:
         return 0, []
@@ -274,7 +270,7 @@ def get_user_string_auth_stat():
         user_string = current_user.email
         if_user_auth = True
     else:
-        user_string = session.get('sid')
+        user_string = session.get('joint')
         if_user_auth = False
 
     return user_string, if_user_auth
@@ -285,13 +281,25 @@ def get_room_alive_seconds(room_type):
 def get_room_cap(room_type):
     return current_app.config['room_type_details'][room_type]['room_cap']
 
+def record_video_loading(vid_dict):
+    #this function will record when a new video is loaded,
+    ts = datetime.now(timezone.utc).timestamp()
+    user_string = session.get('joint')
+    room_id = int(current_app.redis.get('{}_id'.format(session.get('room'))))
+
+    new_videoload_record = VideoLoaded(timestamp=ts, room_id=room_id,
+                                sid=user_string,
+                                videoURL=vid_dict)
+    db.session.add(new_videoload_record)
+    db.session.commit()
+
 
 def record_current_room_user(room_string):
     #this function will record when a new user joins a room,
     #this row will be removed when the user leaves the room or the room expires
     user_string, if_user_auth = get_user_string_auth_stat()
-    print('in record_current_room_user\n')
-    print(user_string, if_user_auth)
+    #print('in record_current_room_user\n')
+    #print(user_string, if_user_auth)
     if (db.session.query(CurrentUserRoomList).filter(CurrentUserRoomList.room_string==room_string).\
         filter(CurrentUserRoomList.user_string==user_string).first() is None):
         current_room_user = CurrentUserRoomList(room_string, user_string, if_user_auth)
@@ -300,8 +308,8 @@ def record_current_room_user(room_string):
 
 def remove_current_room_user(room_string):
     user_string, if_user_auth = get_user_string_auth_stat()
-    print('in remove_current_room_user\n')
-    print(user_string, if_user_auth)
+    #print('in remove_current_room_user\n')
+    #print(user_string, if_user_auth)
     (db.session.query(CurrentUserRoomList).filter(CurrentUserRoomList.room_string==room_string).\
         filter(CurrentUserRoomList.user_string==user_string).delete())
     '''
@@ -331,7 +339,7 @@ def record_last_email_sent(email, reason):
         db.session.add(last_email)
 
     else:
-        print(last_email.id, last_email.email, last_email.timestamp, last_email.num_emails_total)
+        #print(last_email.id, last_email.email, last_email.timestamp, last_email.num_emails_total)
         last_email.timestamp = datetime.now(timezone.utc).timestamp()
         last_email.email_reason=reason
         last_email.num_emails_total += 1
