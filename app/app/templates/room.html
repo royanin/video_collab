@@ -345,18 +345,18 @@
              $('#jitsiStart').prop("disabled",false);
            }
 
-               //create clientId
-                function getRandomInt() {
-                  return Math.floor((Math.random() * 100000) + 1);
-                }
-                var clientId = getRandomInt();
+           //create clientId
+           function getRandomInt() {
+              return Math.floor((Math.random() * 100000) + 1);
+            }
+            var clientId = getRandomInt();
 
-                //Purify user input to remove markups/sql injection
-                var sanitizeText = function (str) {
-                 	return str.replace(/[^\w. ]/gi, function (c) {
-                 		return '&#' + c.charCodeAt(0) + ';';
-                 	});
-                 };
+          //Purify user input to remove markups/sql injection
+          var sanitizeText = function (str) {
+             	return str.replace(/[^\w. ]/gi, function (c) {
+             		return '&#' + c.charCodeAt(0) + ';';
+             	});
+             };
 
 
                var playerEvents =  {
