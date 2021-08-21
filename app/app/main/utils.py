@@ -158,6 +158,10 @@ def check_email_eligible(email, coupon_code=None):
     elif (email_tld == 'ca') and (domain_string_list[-2] in ['ubc', 'utoronto', 'mcgill', 'uottawa', 'ucalgary',
     'mcmaster', 'umontreal', 'ualberta', 'uwaterloo']):
         return True, 'd2edu'
+    elif (email_tld == 'co') and (domain_string_list[-2] in ['edu']):
+        return True, 'd2edu'
+    elif (email_tld == 'cl') and (domain_string_list[-2] in ['udec']):
+        return True, 'd2edu'
     else:
         return False, None
 
@@ -396,6 +400,10 @@ def parse_url(url):
         'xyz.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=abd...'
         'https://xyz.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=401da229-c9a6-49e4-aeab-ab91015553f6'
 
+        #Kaltura:
+        'https://cdnapisec.kaltura.com/p/482261/sp/48226100/embedIframeJs/uiconf_id/39832901/partner_id/
+        482261?iframeembed=true&playerId=kaltura_player&entry_id=1_hywkfjfk'
+
       Invalid:
         'youtu.be/watch?v=_lOT2p_FCvA',
     """
@@ -419,6 +427,21 @@ def parse_url(url):
             return ("yt", query.path[1:])
         elif 'hosted.panopto.com' in query.hostname:
             return ("pt", (query.netloc, parse_qs(query.query)['id'][0]))
+        elif 'cdnapisec.kaltura.com' in query.hostname:
+            print(query)
+            #partner_id =
+            #uiconf_id =
+            query_path = query.path
+            query_path_items = query_path.split('/')
+            for i in range(0, len(query_path_items)):
+                if query_path_items[i] == 'partner_id':
+                    partner_id = query_path_items[i+1]
+                if query_path_items[i] == 'uiconf_id':
+                    uiconf_id = query_path_items[i+1]
+            print('params:', partner_id, uiconf_id)
+            entry_id = parse_qs(query.query)['entry_id'][0]
+            return ("kt", (query.netloc, partner_id, uiconf_id, entry_id))
+
         else:
             raise ValueError
     except Exception as e:

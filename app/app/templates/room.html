@@ -366,6 +366,9 @@
                };
 
                var embedApi;
+               var kWidget;
+               var vtype;
+               var videoId;
 
                function videoLoader(vtype, videoId, startTime=0){
 
@@ -408,7 +411,12 @@
                  else if (vtype=='pt') {
                    tag.src = "https://developers.panopto.com/scripts/embedapi.min.js"; //for panopto
                  }
-
+                 else if (vtype=='kt') {
+                   var partnerID = videoId[1], uiconfID = videoId[2];
+                   tag.src = "https://cdnapisec.kaltura.com/p/"+partnerID+"/sp/"+partnerID+"00/embedIframeJs/uiconf_id/"+uiconfID+"/partner_id/"+partnerID; //for kaltura
+                   //tag.src = "https://cdnapisec.kaltura.com/p/"+partnerID+"/embedIframeJs/uiconf_id/"+uiconfID; //for kaltura
+                 }
+                 //alert(tag.src)
                  var firstScriptTag = document.getElementsByTagName('script')[0];
                  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
@@ -438,6 +446,27 @@
                          },
                          events: playerEvents
                      });
+                   }
+                   else if(vtype=='kt'){
+                     console.log('kaltura video');
+                     var partnerID = videoId[1], uiconfID = videoId[2], entryID=videoId[3];
+                     //var embedApi = kWidget;
+                     kWidget.embed({
+                    		'targetId': 'player',
+                    		'wid': '_'+partnerID,
+                    		'uiconf_id' : uiconfID,
+                    		'entry_id' : entryID,
+                    		'flashvars':{ // flashvars allows you to set runtime uiVar configuration overrides.
+                    			'autoPlay': false
+                    		},
+                    		'params':{ // params allows you to set flash embed params such as wmode, allowFullScreen etc
+                    			'wmode': 'transparent'
+                    		}
+                    	});
+                      kWidget.addReadyCallback( function( playerId ){
+                          var kdp = document.getElementById( playerId );
+                          // kdp var now holds the player reference
+                      });
                    }
 
                  };
@@ -490,16 +519,24 @@
 
                     socket.on('status', function(data) {
                         postRoomLogs(data['msg']);
-                        if (embedApi) {
-                          var vidURL = embedApi.getVideoUrl();
+                        //alert(vtype);
+                        //alert(videoId);
+                        if (embedApi || kWidget) {
 
-                          embedApi.setPlaybackRate(1.0);
+                          if(typeof embedApi.setPlaybackRate== 'function'){
+                              embedApi.setPlaybackRate(1.0);
+                          }
                           stateNow = getCompleteState();
-                          embedApi.pauseVideo(); //Better to stop video and wait to synch
+                          if(typeof embedApi.pauseVideo== 'function'){
+                              embedApi.pauseVideo(); //Better to stop video and wait to synch
+                          }
 
-                          stateNow['vidURL'] = vidURL
+
+                          stateNow['vtype'] = vtype;
+                          stateNow['videoId'] = videoId;
                           //document.getElementById("vidAlert").innerHTML = 'Syncing video for the newcomer';
                           //$('vidAlert').append('Syncing video for the newcomer<br>');
+                          console.log(stateNow);
                           postRoomLogs('Syncing video for the newcomer');
                           socket.emit('video sync', stateNow);
 
@@ -584,7 +621,7 @@
                        //document.getElementById("vidAlert").innerHTML = 'Loading video...';
                        //$('vidAlert').append('Loading video...<br>');
                        postRoomLogs('Loading video...');
-                       videoLoader(stateNow['vtype'], stateNow['vkey'], startTime = stateNow['ptime']);
+                       videoLoader(stateNow['vtype'], stateNow['videoId'], startTime = stateNow['ptime']);
                        //document.getElementById("vidAlert").innerHTML = 'Video ready to play.';
                        //$('vidAlert').append('Video ready to play.<br>');
                        postRoomLogs('Video ready to play');
@@ -644,8 +681,13 @@
                  if (typeof embedApi.getPlayerState == 'function'){
                    pstate = embedApi.getPlayerState(); //this is for youtube
                  }
-                 else {
+                 else if (typeof embedApi.getState == 'function'){
                    pstate = embedApi.getState(); // this is for Panopto
+                 }
+                 else if (kdp){
+                   ptime = kdp.evaluate('{video.player.currentTime}');
+                   alert(ptime);
+                   //pstate =
                  }
                  return {
                  //'clientId': clientId,
@@ -687,7 +729,9 @@
                    dataType: 'json',
                    success: function(response){
                      if(response['type']!='' || response['key']!=''){
-                       videoLoader(response['type'], response['key']);
+                       vtype = response['type'];
+                       videoId = response['key'];
+                       videoLoader(vtype, videoId);
                        //document.getElementById("vidAlert").innerHTML = 'You loaded a new video in the room';
                        //$('vidAlert').append('You loaded a new video in the room<br>');
                        postRoomLogs('You loaded a new video in the room');

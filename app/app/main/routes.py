@@ -296,7 +296,7 @@ def getURL():
     url_input = data['url']
 
     url_type, url_key = parse_url(url_input)
-    #print('parsed_url:', url_type, url_key)
+    print('parsed_url:', url_type, url_key)
     if url_type != None and url_key != None:
         vid_dict = {'type':url_type, 'key':url_key}
         record_video_loading("{}_:_{}".format(url_type, url_key))
